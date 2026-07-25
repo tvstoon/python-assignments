@@ -19,10 +19,9 @@ else:
     print("Level is low")
 
 # 3
-line_offside = 13
-enemy_player = 14
-enemy_number = enemy_player
-if enemy_number > line_offside:
+line_offside = 17
+enemy_position = 10
+if enemy_position > line_offside:
     print("Offside")
 else:
     print("Not Offside")
@@ -50,8 +49,7 @@ else:
     print("That is not enemy")
 
 # 6
-health = 60
-my_health = health
+my_health = 60
 if my_health > 80:
     print("Healthy")
 elif my_health > 50:
@@ -93,18 +91,15 @@ else:
     print("Money is not enough")
 
 # 9
-height = 175
-age = 16
-my_height = height
-my_age = age
+my_height = 175
+my_age = 11
 if my_height > 170 and my_age > 15:
     print("Can go to pool")
 else:
     print("Cannot go to pool")
 
 # 10
-player_point = 25
-my_point = player_point
+my_point = 25
 if my_point > 10 and my_point < 50:
     print("Place is safe")
 elif my_point > 0 and my_point < 10:
