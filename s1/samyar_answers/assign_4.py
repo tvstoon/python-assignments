@@ -106,3 +106,139 @@ elif my_point > 0 and my_point < 10:
     print("Place is not safe")
 else:
     print("Point is not in the ranges")
+
+
+# ---------------------
+# تمکرین 13:
+
+# age = 20
+# has_card = True
+
+# اگر سن سن فرد بیشتر از 19 باشد و همینطور کارت داشته باشد پرینت کنه ورود مجاز است
+age = 20
+has_card = False
+
+if age > 19 and has_card :
+    print ("ok")
+else:
+    print ("not ok")
+
+# ---------------------
+# تمکرین 14:
+# power = 50
+# item = "sword"
+# shield
+
+# اگر آیتم برابر با شمشیر بود بیاد به مقدار قدرتمون 30 تا اضافه کنه و بعدش پرینت کنه  ⚔️ شمشیر گرفتی!
+# اگر آیتم برابر با سپر بود بیاد به مقدار قدرتمون 15 تا اضافه کنه و بعدش پرینت کنه  🛡️ سپر گرفتی!!
+# در غیر اینصورت 10 تا از قدرت کم کنه و پرینت کنه  💀 آیتم خراب بود!
+
+# بعد از بلاک کاندیشن پرینت کنه قدرت نهایییمون
+
+power = 50
+item = ""
+
+if item == "sword" :
+    power = power + 30
+    print("get sword")
+elif item == "shield":
+    power = power + 15
+    print("get shield")
+else:
+    power = power - 10
+    print("item is broken")   
+print(power)
+#___________________________________________________________________________________________________________________________
+#تمرین جدید
+game_items = ['sword', 'bow', 'shield']
+
+power = 0
+
+if game_items[0] == 'sword':
+    power = power + 20
+    print("Sword is in hand")
+
+if game_items[1] == 'shield':
+    power = power + 10
+    print("Can protect")
+
+if game_items[2] == 'bow':
+    power = power + 15
+    print("Can attack from far")
+
+print("Power is:", power)
+
+ 2
+numbers = [5, 23, 17, 30, 12]
+
+for i in numbers:
+    if i > 18:
+        print("You can enter")
+    else:
+        print("You can not enter")
+
+#2
+numbers = [5, 23, 17, 30, 12]
+
+for i in numbers:
+    if i > 18:
+        print("You can enter")
+    else:
+        print("You can not enter")
+
+        #3
+
+
+        numbers = [20, 18, 15, 9, 12]
+
+for i in numbers:
+
+    if i >= 18 and i <= 20:
+        print("Excellent")
+
+    elif i >= 15 and i < 18:
+        print("Medium")
+
+    elif i >= 10 and i < 15:
+        print("Not good")
+
+    else:
+        print("Fail")
+
+        #4
+        far_items = []
+
+game_items = [
+    'sword',
+    'bow',
+    'shield',
+    'axe',
+    'crossbow'
+]
+
+if game_items[0] == 'bow' or game_items[0] == 'crossbow':
+    far_items.append(game_items[0])
+else:
+    pass
+
+if game_items[1] == 'bow' or game_items[1] == 'crossbow':
+    far_items.append(game_items[1])
+else:
+    pass
+
+if game_items[2] == 'bow' or game_items[2] == 'crossbow':
+    far_items.append(game_items[2])
+else:
+    pass
+
+if game_items[3] == 'bow' or game_items[3] == 'crossbow':
+    far_items.append(game_items[3])
+else:
+    pass
+
+if game_items[4] == 'bow' or game_items[4] == 'crossbow':
+    far_items.append(game_items[4])
+else:
+    pass
+
+print(far_items)
