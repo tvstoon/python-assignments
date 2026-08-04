@@ -242,3 +242,94 @@ else:
     pass
 
 print(far_items)
+#--------------------------------------------------------------------------
+#تکالیف جذیذ
+
+names = [
+    "علی", "سامیار", "محمد", "حسین", "مهدی",
+    "امیر", "سارا", "مریم", "نگار", "نرگس",
+    "زهرا", "فاطمه", "آرمان", "پارسا", "کیان",
+    "یاسین", "رها", "نازنین", "پریسا", "مهسا"
+]
+
+for name in names:
+    print(name)
+
+
+    #----------------------------------
+    #2
+
+    a = [1, 34, 7, 8, 34, 2, 1, 4, 345, 12, 234]
+
+for number in a:
+    print(number / 2)
+
+
+    #__________________________________
+    #3
+    a = [1, 34, 7, 8, 34, 2, 1, 4, 345, 12, 234]
+
+for number in a:
+    if number > 10:
+        print(number)
+        #_________________________________________________________________________
+        game_items = ['sword', 'bow', 'shield']
+
+power = 0
+
+for item in game_items:
+    if item == 'sword':
+        power = power + 20
+        print("Sword is in hand")
+
+    elif item == 'shield':
+        power = power + 10
+        print("Can protect")
+
+    elif item == 'bow':
+        power = power + 15
+        print("Can attack from far")
+
+print("Power:", power)
+#
+# _______________________________________________________
+numbers = [5, 27, 14, 19, 8]
+
+for num in numbers:
+    if num > 18:
+        print(num, "You can enter")
+    else:
+        print(num, "You cannot enter")
+#_________________________________________________________
+numbers = [20, 17, 15, 9, 12]
+
+for num in numbers:
+
+    if num >= 18 and num <= 20:
+        print(num, "Excellent")
+
+    elif num >= 15 and num < 18:
+        print(num, "Average")
+
+    elif num >= 10 and num < 15:
+        print(num, "Not good")
+
+    else:
+        print(num, "Fail")
+#________________________________________________________
+new_list = []
+
+game_items = [
+    'sword',
+    'bow',
+    'shield',
+    'axe',
+    'crossbow'
+]
+
+for item in game_items:
+
+    if item == 'bow' or item == 'crossbow':
+        new_list.append(item)
+
+print(new_list)
