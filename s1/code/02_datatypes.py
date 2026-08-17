@@ -10,6 +10,8 @@ player_name = "Franklin"
 money = 5000
 health = 95.5
 is_alive = True
+can_swim = True #Value
+has_bike = True #value
 
 # Integer
 INTEGER_A = 150

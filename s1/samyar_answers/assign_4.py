@@ -365,3 +365,103 @@ a = [1, 34, 7, 8, 34, 2, 1, 4, 345, 12, 234]
 for number in a:
     if number > 10:
         print(number)
+
+#______________________________________________________________________________________________________________________________
+#تمرین اول
+name = input("enter your name: ")
+
+print(type(name))
+print(name)
+
+
+
+#تمرین دوم
+number = input("enter a number: ")
+
+print(type(number))
+
+if type(number) == str:
+    number = int(number)
+
+print(type(number))
+
+#تمرین سوم
+number = input("enter a number: ")
+
+number = int(number)
+
+if number > 10:
+    print("your number is more than 10")
+else:
+    print("your number is less than 10")
+#تمرین چهارم
+names = [
+    "علی", "محمد", "رضا", "حسین", "مهدی",
+    "امیر", "سینا", "آرمان", "سامان", "پویان",
+    "فاطمه", "زهرا", "مریم", "سارا", "نگار",
+    "نرگس", "الهام", "نازنین", "هانیه", "ریحانه",
+    "کیان", "پارسا", "بردیا", "یاسین", "شایان",
+    "ترانه", "مهسا", "رها", "نیلوفر", "بهار"
+]
+
+for name in names:
+    print(name)
+
+#تمرین گنجم
+
+c = [12, 23, 454, 23, 12, 1, 23, 4, 45, 6, 7, 8, 45, 2, 12]
+
+new_list = []
+
+for number in c:
+    if number < 10:
+        new_list.append(number)
+
+print(new_list)
+
+#تمرین شیشم
+my_number = 7
+
+number = input("enter a number: ")
+
+number = int(number)
+
+if number == my_number:
+    print("your number is correct")
+else:
+    print("your number is wrong")
+
+#_______________________________________________________________________________________________________________________
+#تکلیف جدید
+
+# یک متغیر داریم به اسم score
+# مقدار آن برابر 0 است
+#score = 0
+
+# یک متغیر دیگر داریم به اسم correct_number
+# یعنی عدد درست
+#correct_number = 10
+
+# از یوزر با input یک عدد بگیر
+# و آن را بررسی کن که عدد درست است یا نه
+
+# اگر عدد درست را وارد کرد:
+# یک امتیاز به score اضافه کن
+
+# در غیر این صورت:
+# یک امتیاز از score کم کن
+
+# در نهایت خارج از بلاک:
+# score را print کن
+
+score = 0
+correct_number = 10
+
+number = int(input("Enter number: "))
+
+if number == correct_number:
+    score = score + 1
+else:
+    score = score - 1
+
+print(score)
