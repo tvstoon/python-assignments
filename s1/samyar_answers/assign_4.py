@@ -475,16 +475,31 @@
 # سن رو بعدش تبدیل کن به int و مجدد پرینتش کن
 
 
-age = input("Enter your age: ")
-name = input("Enter your name: ")
+# age = input("Enter your age: ")
+# name = input("Enter your name: ")
 
-print(age)
-print(type(age))
+# print(age)
+# print(type(age))
 
-print(name)
-print(type(name))
+# print(name)
+# print(type(name))
 
-age = int(age)
+# age = int(age)
 
-print(age)
-print(type(age))
+# print(age)
+# print(type(age))
+
+
+
+
+#________________________________________________________________________
+#تمرین جدید
+
+age = int(input("سن خود را وارد کنید: "))
+
+if age < 10:
+    print(" javan hast")
+elif age <= 20:
+    print("nojavan")
+else:
+    print("pir")
