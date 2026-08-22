@@ -503,3 +503,23 @@ elif age <= 20:
     print("nojavan")
 else:
     print("pir")
+
+
+
+#_________________________________________________________________________________________________________________________________________
+#تمرین جدید
+
+list_a = [1, 23, 3, 2, 12, 4, 5, 34, 1, 1, 5, 445, 56, 7, 64, 2, 3, 4]
+
+greater_than_10 = []
+less_than_10 = []
+
+for x in list_a:
+    if x > 10:
+        greater_than_10.append(x)
+
+    if x < 10:
+        less_than_10.append(x)
+
+print(greater_than_10)
+print(less_than_10)
