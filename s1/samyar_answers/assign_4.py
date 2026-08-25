@@ -453,20 +453,20 @@
 
 # # در نهایت خارج از بلاک:
 # # score را print کن
+def tamrin_3():
+    score = 0
+    correct_number = 10
 
-# score = 0
-# correct_number = 10
+    number = int(input("Enter number: "))
 
-# number = int(input("Enter number: "))
+    if number == correct_number:
+        score = score + 1
+    else:
+        score = score - 1
 
-# if number == correct_number:
-#     score = score + 1
-# else:
-#     score = score - 1
+    print(score)
 
-# print(score)
-
-#________________________________________________________________________________________________________________________________________________
+# ________________________________________________________________________________________________________________________________________________
 #تمرین جدید
 
 # از یوزر سنش رو بگیر 
@@ -474,89 +474,181 @@
 # و پرینت کن تایپاشون رو و همینطور خودشون رو
 # سن رو بعدش تبدیل کن به int و مجدد پرینتش کن
 
+def tamrin_4():
+    age = input("Enter your age: ")
+    name = input("Enter your name: ")
 
-# age = input("Enter your age: ")
-# name = input("Enter your name: ")
+    print(age)
+    print(type(age))
 
-# print(age)
-# print(type(age))
+    print(name)
+    print(type(name))
 
-# print(name)
-# print(type(name))
+    age = int(age)
 
-# age = int(age)
-
-# print(age)
-# print(type(age))
-
-
-
-
-#________________________________________________________________________
-#تمرین جدید
-
-age = int(input("سن خود را وارد کنید: "))
-
-if age < 10:
-    print(" javan hast")
-elif age <= 20:
-    print("nojavan")
-else:
-    print("pir")
+    print(age)
+    print(type(age))
 
 
 
-#_________________________________________________________________________________________________________________________________________
-#تمرین جدید
 
-list_a = [1, 23, 3, 2, 12, 4, 5, 34, 1, 1, 5, 445, 56, 7, 64, 2, 3, 4]
+# #________________________________________________________________________
+# #تمرین جدید
+def tamrin_5():
+    age = int(input("سن خود را وارد کنید: "))
 
-greater_than_10 = []
-less_than_10 = []
+    if age < 10:
+        print(" javan hast")
+    elif age <= 20:
+        print("nojavan")
+    else:
+        print("pir")
 
-for x in list_a:
-    if x > 10:
-        greater_than_10.append(x)
 
-    if x < 10:
-        less_than_10.append(x)
 
-print(greater_than_10)
-print(less_than_10)
+# #_________________________________________________________________________________________________________________________________________
+# #تمرین جدید
+def tamrin_6():
+    list_a = [1, 23, 3, 2, 12, 4, 5, 34, 1, 1, 5, 445, 56, 7, 64, 2, 3, 4]
 
-#__________________________________________________________________________________________________________________
-# 1
-# از بوزر 
-# سن 
-# و اسمش را بگیر جدا
-# ‌ به لیست های زیر اضافه کن 
-# users_age = [12, 23 , 43]
-# users_name = [‘maryam’, ‘morteza’, ‘mirza’ ]
+    greater_than_10 = []
+    less_than_10 = []
+
+    for x in list_a:
+        if x > 10:
+            greater_than_10.append(x)
+
+        if x < 10:
+            less_than_10.append(x)
+
+    print(greater_than_10)
+    print(less_than_10)
+
+
 
 # ۲
 # از لیست زبر مقادیری که بزرگ تر از ۱۰ هست رو به یک لیست جدید اضافه کن
-# a=[34,2,5,34,78,6,5,13,15,19,67,5,9]
+def tamrrin_7():
+    a=[34,2,5,34,78,6,5,13,15,19,67,5,9]
 
-users_age = [12, 23, 43]
-users_name = ['maryam', 'morteza', 'mirza']
+    users_age = [12, 23, 43]
+    users_name = ['maryam', 'morteza', 'mirza']
 
-name = input("اسم را وارد کنید: ")
-age = int(input("سن را وارد کنید: "))
+    name = input("اسم را وارد کنید: ")
+    age = int(input("سن را وارد کنید: "))
 
-users_name.append(name)
-users_age.append(age)
+    users_name.append(name)
+    users_age.append(age)
 
-print(users_name)
-print(users_age)
+    print(users_name)
+    print(users_age)
 
-#________________________________________________________________________________________________________________________
+# #________________________________________________________________________________________________________________________
+def tamrin_8():
+    a = [34, 2, 5, 34, 78, 6, 5, 13, 15, 19, 67, 5, 9]
 
-a = [34, 2, 5, 34, 78, 6, 5, 13, 15, 19, 67, 5, 9]
+    new_list = []
 
-new_list = []
+    for i in a:
+        if i > 10:
+            new_list.append(i)
 
-for i in a:
-    if i > 10:
-        new_list.append(i)
+    print(new_list)
 
-print(new_list)
+
+
+def tamrin_9():
+    a = [34, 2, 5, 34, 78, 6, 5, 13, 15, 19, 67, 5, 9]
+    b = []
+    for ooo in a :
+        if ooo > 10 :
+            b.append(ooo)
+    print(b)
+
+
+def tamrin_10():
+    a = None
+    ooo = input("adad ra vard kon : ")
+    ooo = int(ooo)
+    if ooo < 10 :
+        a = "kodak"
+    elif ooo > 10 :
+        a = "pir"
+    print(a)
+
+
+
+def tamrin_akhar():
+    b = [12,1,2,23,3,2,1,23,4,3,2,34,32,234,234]
+
+    ccc = int(input("meghdar 1 : "))
+
+    ooo = int(input("meghdar 2 : "))
+
+    fff = ooo + ccc
+    
+    if fff > 10 :
+        b.append(fff)
+
+#________________________________________________________________________________________________________________________________________
+def jam_adad(a, b, c):
+    jam = a + b + c
+    print(jam)
+
+
+jam_adad(2, 3, 4)
+jam_adad(10, 5, 2)
+jam_adad(1, 1, 8)
+
+a = int(input("سنتو بده : "))
+print(a)
+
+def sen():
+    a = int(input("سنتو بده : "))
+    print(a)
+
+
+sen()
+
+#__________________________________________________________________________________________________________________________
+# 1 
+def jam_adad(a, b, c): 
+    print(a + b + c) 
+ 
+jam_adad(2, 3, 4) 
+jam_adad(5, 5, 5) 
+jam_adad(10, 20, 30) 
+ 
+ 
+# 2 
+def sen(): 
+    a = int(input("سنتو بده : ")) 
+    print(a) 
+ 
+sen() 
+ 
+ 
+# 3 
+a = 100 
+ 
+x = int(input("عدد اول: ")) 
+y = int(input("عدد دوم: ")) 
+z = int(input("عدد سوم: ")) 
+ 
+jam = x + y + z 
+ 
+if jam > a: 
+    print("ok") 
+else: 
+    print("no") 
+ 
+ 
+# 4 
+multiplied = [4, 6, 8, 7, 6] 
+ 
+x = int(input("یک عدد بده: ")) 
+x = x * 2 
+ 
+multiplied.append(x) 
+ 
+print(multiplied)  
