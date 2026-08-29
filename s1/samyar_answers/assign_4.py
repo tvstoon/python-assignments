@@ -146,7 +146,7 @@
 #     print("get shield")
 # else:
 #     power = power - 10
-#     print("item is broken")   
+#     print("item is broken")
 # print(power)
 # #___________________________________________________________________________________________________________________________
 # #تمرین جدید
@@ -168,7 +168,7 @@
 
 # print("Power is:", power)
 
- 
+
 # numbers = [5, 23, 17, 30, 12]
 
 # for i in numbers:
@@ -374,7 +374,6 @@
 # print(name)
 
 
-
 # #تمرین دوم
 # number = input("enter a number: ")
 
@@ -420,16 +419,20 @@
 # print(new_list)
 
 # #تمرین شیشم
-# my_number = 7
+def tamrin_3():
+    my_number = 7
 
-# number = input("enter a number: ")
+    number = input("enter a number: ")
 
-# number = int(number)
+    number = int(number)
 
-# if number == my_number:
-#     print("your number is correct")
-# else:
-#     print("your number is wrong")
+    if number == my_number:
+        print("your number is correct")
+    else:
+        print("your number is wrong")
+
+
+tamrin_3()
 
 # #_______________________________________________________________________________________________________________________
 # #تکلیف جدید
@@ -453,6 +456,8 @@
 
 # # در نهایت خارج از بلاک:
 # # score را print کن
+
+
 def tamrin_3():
     score = 0
     correct_number = 10
@@ -467,12 +472,13 @@ def tamrin_3():
     print(score)
 
 # ________________________________________________________________________________________________________________________________________________
-#تمرین جدید
+# تمرین جدید
 
-# از یوزر سنش رو بگیر 
-# مجدد از یوزر اسمش هم بگیر 
+# از یوزر سنش رو بگیر
+# مجدد از یوزر اسمش هم بگیر
 # و پرینت کن تایپاشون رو و همینطور خودشون رو
 # سن رو بعدش تبدیل کن به int و مجدد پرینتش کن
+
 
 def tamrin_4():
     age = input("Enter your age: ")
@@ -490,8 +496,6 @@ def tamrin_4():
     print(type(age))
 
 
-
-
 # #________________________________________________________________________
 # #تمرین جدید
 def tamrin_5():
@@ -503,7 +507,6 @@ def tamrin_5():
         print("nojavan")
     else:
         print("pir")
-
 
 
 # #_________________________________________________________________________________________________________________________________________
@@ -525,11 +528,10 @@ def tamrin_6():
     print(less_than_10)
 
 
-
 # ۲
 # از لیست زبر مقادیری که بزرگ تر از ۱۰ هست رو به یک لیست جدید اضافه کن
 def tamrrin_7():
-    a=[34,2,5,34,78,6,5,13,15,19,67,5,9]
+    a = [34, 2, 5, 34, 78, 6, 5, 13, 15, 19, 67, 5, 9]
 
     users_age = [12, 23, 43]
     users_name = ['maryam', 'morteza', 'mirza']
@@ -544,6 +546,8 @@ def tamrrin_7():
     print(users_age)
 
 # #________________________________________________________________________________________________________________________
+
+
 def tamrin_8():
     a = [34, 2, 5, 34, 78, 6, 5, 13, 15, 19, 67, 5, 9]
 
@@ -556,12 +560,11 @@ def tamrin_8():
     print(new_list)
 
 
-
 def tamrin_9():
     a = [34, 2, 5, 34, 78, 6, 5, 13, 15, 19, 67, 5, 9]
     b = []
-    for ooo in a :
-        if ooo > 10 :
+    for ooo in a:
+        if ooo > 10:
             b.append(ooo)
     print(b)
 
@@ -570,27 +573,28 @@ def tamrin_10():
     a = None
     ooo = input("adad ra vard kon : ")
     ooo = int(ooo)
-    if ooo < 10 :
+    if ooo < 10:
         a = "kodak"
-    elif ooo > 10 :
+    elif ooo > 10:
         a = "pir"
     print(a)
 
 
-
 def tamrin_akhar():
-    b = [12,1,2,23,3,2,1,23,4,3,2,34,32,234,234]
+    b = [12, 1, 2, 23, 3, 2, 1, 23, 4, 3, 2, 34, 32, 234, 234]
 
     ccc = int(input("meghdar 1 : "))
 
     ooo = int(input("meghdar 2 : "))
 
     fff = ooo + ccc
-    
-    if fff > 10 :
+
+    if fff > 10:
         b.append(fff)
 
-#________________________________________________________________________________________________________________________________________
+# ________________________________________________________________________________________________________________________________________
+
+
 def jam_adad(a, b, c):
     jam = a + b + c
     print(jam)
@@ -603,6 +607,7 @@ jam_adad(1, 1, 8)
 a = int(input("سنتو بده : "))
 print(a)
 
+
 def sen():
     a = int(input("سنتو بده : "))
     print(a)
@@ -610,45 +615,49 @@ def sen():
 
 sen()
 
-#__________________________________________________________________________________________________________________________
-# 1 
-def jam_adad(a, b, c): 
-    print(a + b + c) 
- 
-jam_adad(2, 3, 4) 
-jam_adad(5, 5, 5) 
-jam_adad(10, 20, 30) 
- 
- 
-# 2 
-def sen(): 
-    a = int(input("سنتو بده : ")) 
-    print(a) 
- 
-sen() 
- 
- 
-# 3 
-a = 100 
- 
-x = int(input("عدد اول: ")) 
-y = int(input("عدد دوم: ")) 
-z = int(input("عدد سوم: ")) 
- 
-jam = x + y + z 
- 
-if jam > a: 
-    print("ok") 
-else: 
-    print("no") 
- 
- 
-# 4 
-multiplied = [4, 6, 8, 7, 6] 
- 
-x = int(input("یک عدد بده: ")) 
-x = x * 2 
- 
-multiplied.append(x) 
- 
-print(multiplied)  
+# __________________________________________________________________________________________________________________________
+# 1
+
+
+def jam_adad(a, b, c):
+    print(a + b + c)
+
+
+jam_adad(2, 3, 4)
+jam_adad(5, 5, 5)
+jam_adad(10, 20, 30)
+
+
+# 2
+def sen():
+    a = int(input("سنتو بده : "))
+    print(a)
+
+
+sen()
+
+
+# 3
+a = 100
+
+x = int(input("عدد اول: "))
+y = int(input("عدد دوم: "))
+z = int(input("عدد سوم: "))
+
+jam = x + y + z
+
+if jam > a:
+    print("ok")
+else:
+    print("no")
+
+
+# 4
+multiplied = [4, 6, 8, 7, 6]
+
+x = int(input("یک عدد بده: "))
+x = x * 2
+
+multiplied.append(x)
+
+print(multiplied)
