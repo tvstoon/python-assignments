@@ -458,253 +458,266 @@ tamrin_3()
 # # score را print کن
 
 
-def tamrin_3():
-    score = 0
-    correct_number = 10
+# def tamrin_3():
+#     score = 0
+#     correct_number = 10
 
-    number = int(input("Enter number: "))
+#     number = int(input("Enter number: "))
 
-    if number == correct_number:
-        score = score + 1
-    else:
-        score = score - 1
+#     if number == correct_number:
+#         score = score + 1
+#     else:
+#         score = score - 1
 
-    print(score)
+#     print(score)
 
-# ________________________________________________________________________________________________________________________________________________
-# تمرین جدید
+# # ________________________________________________________________________________________________________________________________________________
+# # تمرین جدید
 
-# از یوزر سنش رو بگیر
-# مجدد از یوزر اسمش هم بگیر
-# و پرینت کن تایپاشون رو و همینطور خودشون رو
-# سن رو بعدش تبدیل کن به int و مجدد پرینتش کن
+# # از یوزر سنش رو بگیر
+# # مجدد از یوزر اسمش هم بگیر
+# # و پرینت کن تایپاشون رو و همینطور خودشون رو
+# # سن رو بعدش تبدیل کن به int و مجدد پرینتش کن
 
 
-def tamrin_4():
-    age = input("Enter your age: ")
-    name = input("Enter your name: ")
+# def tamrin_4():
+#     age = input("Enter your age: ")
+#     name = input("Enter your name: ")
 
-    print(age)
-    print(type(age))
+#     print(age)
+#     print(type(age))
 
-    print(name)
-    print(type(name))
+#     print(name)
+#     print(type(name))
 
-    age = int(age)
+#     age = int(age)
 
-    print(age)
-    print(type(age))
+#     print(age)
+#     print(type(age))
 
 
-# #________________________________________________________________________
-# #تمرین جدید
-def tamrin_5():
-    age = int(input("سن خود را وارد کنید: "))
+# # #________________________________________________________________________
+# # #تمرین جدید
+# def tamrin_5():
+#     age = int(input("سن خود را وارد کنید: "))
 
-    if age < 10:
-        print(" javan hast")
-    elif age <= 20:
-        print("nojavan")
-    else:
-        print("pir")
+#     if age < 10:
+#         print(" javan hast")
+#     elif age <= 20:
+#         print("nojavan")
+#     else:
+#         print("pir")
 
 
-# #_________________________________________________________________________________________________________________________________________
-# #تمرین جدید
-def tamrin_6():
-    list_a = [1, 23, 3, 2, 12, 4, 5, 34, 1, 1, 5, 445, 56, 7, 64, 2, 3, 4]
+# # #_________________________________________________________________________________________________________________________________________
+# # #تمرین جدید
+# def tamrin_6():
+#     list_a = [1, 23, 3, 2, 12, 4, 5, 34, 1, 1, 5, 445, 56, 7, 64, 2, 3, 4]
 
-    greater_than_10 = []
-    less_than_10 = []
+#     greater_than_10 = []
+#     less_than_10 = []
 
-    for x in list_a:
-        if x > 10:
-            greater_than_10.append(x)
+#     for x in list_a:
+#         if x > 10:
+#             greater_than_10.append(x)
 
-        if x < 10:
-            less_than_10.append(x)
+#         if x < 10:
+#             less_than_10.append(x)
 
-    print(greater_than_10)
-    print(less_than_10)
+#     print(greater_than_10)
+#     print(less_than_10)
 
 
-# ۲
-# از لیست زبر مقادیری که بزرگ تر از ۱۰ هست رو به یک لیست جدید اضافه کن
-def tamrrin_7():
-    a = [34, 2, 5, 34, 78, 6, 5, 13, 15, 19, 67, 5, 9]
+# # ۲
+# # از لیست زبر مقادیری که بزرگ تر از ۱۰ هست رو به یک لیست جدید اضافه کن
+# def tamrrin_7():
+#     a = [34, 2, 5, 34, 78, 6, 5, 13, 15, 19, 67, 5, 9]
 
-    users_age = [12, 23, 43]
-    users_name = ['maryam', 'morteza', 'mirza']
+#     users_age = [12, 23, 43]
+#     users_name = ['maryam', 'morteza', 'mirza']
 
-    name = input("اسم را وارد کنید: ")
-    age = int(input("سن را وارد کنید: "))
+#     name = input("اسم را وارد کنید: ")
+#     age = int(input("سن را وارد کنید: "))
 
-    users_name.append(name)
-    users_age.append(age)
+#     users_name.append(name)
+#     users_age.append(age)
 
-    print(users_name)
-    print(users_age)
+#     print(users_name)
+#     print(users_age)
 
-# #________________________________________________________________________________________________________________________
+# # #________________________________________________________________________________________________________________________
 
 
-def tamrin_8():
-    a = [34, 2, 5, 34, 78, 6, 5, 13, 15, 19, 67, 5, 9]
+# def tamrin_8():
+#     a = [34, 2, 5, 34, 78, 6, 5, 13, 15, 19, 67, 5, 9]
 
-    new_list = []
+#     new_list = []
 
-    for i in a:
-        if i > 10:
-            new_list.append(i)
+#     for i in a:
+#         if i > 10:
+#             new_list.append(i)
 
-    print(new_list)
+#     print(new_list)
 
 
-def tamrin_9():
-    a = [34, 2, 5, 34, 78, 6, 5, 13, 15, 19, 67, 5, 9]
-    b = []
-    for ooo in a:
-        if ooo > 10:
-            b.append(ooo)
-    print(b)
+# def tamrin_9():
+#     a = [34, 2, 5, 34, 78, 6, 5, 13, 15, 19, 67, 5, 9]
+#     b = []
+#     for ooo in a:
+#         if ooo > 10:
+#             b.append(ooo)
+#     print(b)
 
 
-def tamrin_10():
-    a = None
-    ooo = input("adad ra vard kon : ")
-    ooo = int(ooo)
-    if ooo < 10:
-        a = "kodak"
-    elif ooo > 10:
-        a = "pir"
-    print(a)
+# def tamrin_10():
+#     a = None
+#     ooo = input("adad ra vard kon : ")
+#     ooo = int(ooo)
+#     if ooo < 10:
+#         a = "kodak"
+#     elif ooo > 10:
+#         a = "pir"
+#     print(a)
 
 
-def tamrin_akhar():
-    b = [12, 1, 2, 23, 3, 2, 1, 23, 4, 3, 2, 34, 32, 234, 234]
+# def tamrin_akhar():
+#     b = [12, 1, 2, 23, 3, 2, 1, 23, 4, 3, 2, 34, 32, 234, 234]
 
-    ccc = int(input("meghdar 1 : "))
+#     ccc = int(input("meghdar 1 : "))
 
-    ooo = int(input("meghdar 2 : "))
+#     ooo = int(input("meghdar 2 : "))
 
-    fff = ooo + ccc
+#     fff = ooo + ccc
 
-    if fff > 10:
-        b.append(fff)
+#     if fff > 10:
+#         b.append(fff)
 
-# ________________________________________________________________________________________________________________________________________
+# # ________________________________________________________________________________________________________________________________________
 
 
-def jam_adad(a, b, c):
-    jam = a + b + c
-    print(jam)
+# def jam_adad(a, b, c):
+#     jam = a + b + c
+#     print(jam)
 
 
-jam_adad(2, 3, 4)
-jam_adad(10, 5, 2)
-jam_adad(1, 1, 8)
+# jam_adad(2, 3, 4)
+# jam_adad(10, 5, 2)
+# jam_adad(1, 1, 8)
 
-a = int(input("سنتو بده : "))
-print(a)
+# a = int(input("سنتو بده : "))
+# print(a)
 
 
-def sen():
-    a = int(input("سنتو بده : "))
-    print(a)
+# def sen():
+#     a = int(input("سنتو بده : "))
+#     print(a)
 
 
-sen()
+# sen()
 
-# __________________________________________________________________________________________________________________________
-# 1
+# # __________________________________________________________________________________________________________________________
+# # 1
 
 
-def jam_adad(a, b, c):
-    print(a + b + c)
+# def jam_adad(a, b, c):
+#     print(a + b + c)
 
 
-jam_adad(2, 3, 4)
-jam_adad(5, 5, 5)
-jam_adad(10, 20, 30)
+# jam_adad(2, 3, 4)
+# jam_adad(5, 5, 5)
+# jam_adad(10, 20, 30)
 
 
-# 2
-def sen():
-    a = int(input("سنتو بده : "))
-    print(a)
+# # 2
+# def sen():
+#     a = int(input("سنتو بده : "))
+#     print(a)
 
 
-sen()
+# sen()
 
 
-# 3
-a = 100
+# # 3
+# a = 100
 
-x = int(input("عدد اول: "))
-y = int(input("عدد دوم: "))
-z = int(input("عدد سوم: "))
+# x = int(input("عدد اول: "))
+# y = int(input("عدد دوم: "))
+# z = int(input("عدد سوم: "))
 
-jam = x + y + z
+# jam = x + y + z
 
-if jam > a:
-    print("ok")
-else:
-    print("no")
+# if jam > a:
+#     print("ok")
+# else:
+#     print("no")
 
 
-# 4
-multiplied = [4, 6, 8, 7, 6]
+# # 4
+# multiplied = [4, 6, 8, 7, 6]
 
-x = int(input("یک عدد بده: "))
-x = x * 2
+# x = int(input("یک عدد بده: "))
+# x = x * 2
 
-multiplied.append(x)
+# multiplied.append(x)
 
-print(multiplied)
+# print(multiplied)
 
-#_____________________________________________________________________________________________________________________________________________________________
+# #_____________________________________________________________________________________________________________________________________________________________
 
-def kam():
-    a = int(input("adad 1: "))
-    b = int(input("adad 2: "))
-    c = int(input("adad 3: "))
-    d = int(input("adad 4: "))
+# def kam():
+#     a = int(input("adad 1: "))
+#     b = int(input("adad 2: "))
+#     c = int(input("adad 3: "))
+#     d = int(input("adad 4: "))
 
-    javab = a - b - c - d
+#     javab = a - b - c - d
 
-    print(javab)
+#     print(javab)
 
-kam()
+# kam()
 
-#__________________________________________________________________________________________________________________________________________
+# #__________________________________________________________________________________________________________________________________________
 
-a = [1,2,334,5,4,3,12,23,544,1,32,2,54,5,65]
+# a = [1,2,334,5,4,3,12,23,544,1,32,2,54,5,65]
 
-b = []
+# b = []
 
-for i in a:
-    b.append(i * 2)
+# for i in a:
+#     b.append(i * 2)
 
-print(b)
+# print(b)
 
-#_______________________________________________________________________________________________________________________________________________________
+# #_______________________________________________________________________________________________________________________________________________________
 
-def welcome(name):
-    print("welcome", name)
+# def welcome(name):
+#     print("welcome", name)
 
-welcome("Samyar")
+# welcome("Samyar")
 
-#_________________________________________________________________________________________________________________________________
-def zarb(adad):
-    adad = adad * 2
-    print(adad)
+# #_________________________________________________________________________________________________________________________________
+# def zarb(adad):
+#     adad = adad * 2
+#     print(adad)
 
-zarb(5)
+# zarb(5)
 
-#_______________________________________________________________________________________________________________________________________________
+# #_______________________________________________________________________________________________________________________________________________
+
+# def zarb(a, b):
+#     javab = a * b
+#     print(javab)
+
+
+
+#_____________________________________________________________________________________________________________________________________________
 
 def zarb(a, b):
     javab = a * b
-    print(javab)
+    return javab
 
-zarb(5, 3)
+x = int(input("Enter number 1: "))
+y = int(input("Enter number 2: "))
+
+natije = zarb(x, y)
+
+print(natije)
