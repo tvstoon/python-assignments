@@ -721,3 +721,17 @@ y = int(input("Enter number 2: "))
 natije = zarb(x, y)
 
 print(natije)
+
+
+
+#_____________________________________________________________________________________________________________________________________
+#برای جبران تمرینات
+def jam(a, b):
+    return a + b
+
+a = int(input("Number: "))
+b = int(input("Number: "))
+
+javab = jam(a, b)
+
+print(javab)
