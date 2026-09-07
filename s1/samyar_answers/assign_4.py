@@ -711,27 +711,37 @@ tamrin_3()
 
 #_____________________________________________________________________________________________________________________________________________
 
-def zarb(a, b):
-    javab = a * b
-    return javab
+# def zarb(a, b):
+#     javab = a * b
+#     return javab
 
-x = int(input("Enter number 1: "))
-y = int(input("Enter number 2: "))
+# x = int(input("Enter number 1: "))
+# y = int(input("Enter number 2: "))
 
-natije = zarb(x, y)
+# natije = zarb(x, y)
 
-print(natije)
+# print(natije)
 
 
 
-#_____________________________________________________________________________________________________________________________________
-#برای جبران تمرینات
-def jam(a, b):
-    return a + b
+# #_____________________________________________________________________________________________________________________________________
+# #برای جبران تمرینات
+# def jam(a, b):
+#     return a + b
 
-a = int(input("Number: "))
-b = int(input("Number: "))
+# a = int(input("Number: "))
+# b = int(input("Number: "))
 
-javab = jam(a, b)
+# javab = jam(a, b)
 
-print(javab)
+# print(javab)
+
+#______________________________________________________________________________________________________________________________________
+
+def age(user_age):
+    if user_age < 10:
+        return "کودک"
+    else:
+        return "پیر"
+
+print(age(8))
