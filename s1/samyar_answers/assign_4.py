@@ -751,11 +751,19 @@
 
 #____________________________________________________________________________________________________________________________________________________________________________
 
+# import math
+
+# def ooo(x):
+#     return math.pow(x, 2)
+
+# number = int(input("adad ra vared konid : "))
+
+# print(ooo(number))
+
 import math
 
-def ooo(x):
-    return math.pow(x, 2)
+def power_two(number):
+    return math.pow(number, 2)
 
-number = int(input("adad ra vared konid : "))
-
-print(ooo(number))
+number = int(input())
+print(power_two(number))
