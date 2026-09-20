@@ -760,10 +760,26 @@
 
 # print(ooo(number))
 
-import math
+# import math
 
-def power_two(number):
-    return math.pow(number, 2)
+# def power_two(number):
+#     return math.pow(number, 2)
 
-number = int(input())
-print(power_two(number))
+# number = int(input())
+# print(power_two(number))
+
+
+
+#_________________________________________________________________________________________________________________________________________________________________________________________________
+
+
+
+from PySide6.QtWidgets import QApplication, QPushButton
+
+app = QApplication()
+
+button = QPushButton("docme")
+
+button.show()
+
+app.exec()
