@@ -1,756 +1,785 @@
 
-# # -----------------------------------------
-# # 1
-# health = 40
-# check_number = 50
-# my_health = health
-# if my_health < check_number:
-#     print("Health is low")
-# else:
-#     print("Health is good")
+# # # -----------------------------------------
+# # # 1
+# # health = 40
+# # check_number = 50
+# # my_health = health
+# # if my_health < check_number:
+# #     print("Health is low")
+# # else:
+# #     print("Health is good")
 
-# # 2
-# player_level = 12
-# min_level = 10
-# my_level = player_level
-# if my_level >= min_level:
-#     print("You can enter")
-# else:
-#     print("Level is low")
+# # # 2
+# # player_level = 12
+# # min_level = 10
+# # my_level = player_level
+# # if my_level >= min_level:
+# #     print("You can enter")
+# # else:
+# #     print("Level is low")
 
-# # 3
-# line_offside = 17
-# enemy_position = 10
-# if enemy_position > line_offside:
-#     print("Offside")
-# else:
-#     print("Not Offside")
+# # # 3
+# # line_offside = 17
+# # enemy_position = 10
+# # if enemy_position > line_offside:
+# #     print("Offside")
+# # else:
+# #     print("Not Offside")
 
-# # 4
-# finish_point = 40
-# player_position = 45
-# my_position = player_position
-# if my_position > finish_point:
-#     print("Player won")
-# else:
-#     print("Player did not win")
+# # # 4
+# # finish_point = 40
+# # player_position = 45
+# # my_position = player_position
+# # if my_position > finish_point:
+# #     print("Player won")
+# # else:
+# #     print("Player did not win")
 
-# # 5
-# name = "Amir"
-# level = 5
-# color_of_skin = "Blue"
-# print(type(name))
-# print(type(level))
-# print(type(color_of_skin))
-# my_color = color_of_skin
-# if my_color == "Blue":
-#     print("That is enemy")
-# else:
-#     print("That is not enemy")
+# # # 5
+# # name = "Amir"
+# # level = 5
+# # color_of_skin = "Blue"
+# # print(type(name))
+# # print(type(level))
+# # print(type(color_of_skin))
+# # my_color = color_of_skin
+# # if my_color == "Blue":
+# #     print("That is enemy")
+# # else:
+# #     print("That is not enemy")
 
-# # 6
-# my_health = 60
-# if my_health > 80:
-#     print("Healthy")
-# elif my_health > 50:
-#     print("Need medicine")
-# elif my_health > 10:
-#     print("Critical")
-# elif my_health == 0:
-#     print("Dead")
-# else:
-#     print("Unknown status")
+# # # 6
+# # my_health = 60
+# # if my_health > 80:
+# #     print("Healthy")
+# # elif my_health > 50:
+# #     print("Need medicine")
+# # elif my_health > 10:
+# #     print("Critical")
+# # elif my_health == 0:
+# #     print("Dead")
+# # else:
+# #     print("Unknown status")
 
-# # 7
-# action = "Kick"
-# health = 100
-# if action == "Punch":
-#     health = health - 10
-#     print("Punched, health decreased")
-#     print("Health now:", health)
-# elif action == "Kick":
-#     health = health - 25
-#     print("Kicked, health decreased")
-#     print("Health now:", health)
-# elif action == "Gun":
-#     health = 0
-#     print("Shot by gun, died instantly!")
-#     print("Health now:", health)
-# else:
-#     print("I don't know this action")
+# # # 7
+# # action = "Kick"
+# # health = 100
+# # if action == "Punch":
+# #     health = health - 10
+# #     print("Punched, health decreased")
+# #     print("Health now:", health)
+# # elif action == "Kick":
+# #     health = health - 25
+# #     print("Kicked, health decreased")
+# #     print("Health now:", health)
+# # elif action == "Gun":
+# #     health = 0
+# #     print("Shot by gun, died instantly!")
+# #     print("Health now:", health)
+# # else:
+# #     print("I don't know this action")
 
-# # 8
-# money = 100
-# price_game = 10
-# price_ai = 20
-# price_gamepass = 25
-# total_cost = price_game + price_ai + price_gamepass
-# if total_cost <= money:
-#     print("Money is enough, you can buy all")
-# else:
-#     print("Money is not enough")
+# # # 8
+# # money = 100
+# # price_game = 10
+# # price_ai = 20
+# # price_gamepass = 25
+# # total_cost = price_game + price_ai + price_gamepass
+# # if total_cost <= money:
+# #     print("Money is enough, you can buy all")
+# # else:
+# #     print("Money is not enough")
 
-# # 9
-# my_height = 175
-# my_age = 11
-# if my_height > 170 and my_age > 15:
-#     print("Can go to pool")
-# else:
-#     print("Cannot go to pool")
+# # # 9
+# # my_height = 175
+# # my_age = 11
+# # if my_height > 170 and my_age > 15:
+# #     print("Can go to pool")
+# # else:
+# #     print("Cannot go to pool")
 
-# # 10
-# my_point = 25
-# if my_point > 10 and my_point < 50:
-#     print("Place is safe")
-# elif my_point > 0 and my_point < 10:
-#     print("Place is not safe")
-# else:
-#     print("Point is not in the ranges")
+# # # 10
+# # my_point = 25
+# # if my_point > 10 and my_point < 50:
+# #     print("Place is safe")
+# # elif my_point > 0 and my_point < 10:
+# #     print("Place is not safe")
+# # else:
+# #     print("Point is not in the ranges")
 
 
-# # ---------------------
-# # تمکرین 13:
+# # # ---------------------
+# # # تمکرین 13:
 
+# # # age = 20
+# # # has_card = True
+
+# # # اگر سن سن فرد بیشتر از 19 باشد و همینطور کارت داشته باشد پرینت کنه ورود مجاز است
 # # age = 20
-# # has_card = True
+# # has_card = False
 
-# # اگر سن سن فرد بیشتر از 19 باشد و همینطور کارت داشته باشد پرینت کنه ورود مجاز است
-# age = 20
-# has_card = False
+# # if age > 19 and has_card :
+# #     print ("ok")
+# # else:
+# #     print ("not ok")
 
-# if age > 19 and has_card :
-#     print ("ok")
-# else:
-#     print ("not ok")
+# # # ---------------------
+# # # تمکرین 14:
+# # # power = 50
+# # # item = "sword"
+# # # shield
 
-# # ---------------------
-# # تمکرین 14:
+# # # اگر آیتم برابر با شمشیر بود بیاد به مقدار قدرتمون 30 تا اضافه کنه و بعدش پرینت کنه  ⚔️ شمشیر گرفتی!
+# # # اگر آیتم برابر با سپر بود بیاد به مقدار قدرتمون 15 تا اضافه کنه و بعدش پرینت کنه  🛡️ سپر گرفتی!!
+# # # در غیر اینصورت 10 تا از قدرت کم کنه و پرینت کنه  💀 آیتم خراب بود!
+
+# # # بعد از بلاک کاندیشن پرینت کنه قدرت نهایییمون
+
 # # power = 50
-# # item = "sword"
-# # shield
+# # item = ""
 
-# # اگر آیتم برابر با شمشیر بود بیاد به مقدار قدرتمون 30 تا اضافه کنه و بعدش پرینت کنه  ⚔️ شمشیر گرفتی!
-# # اگر آیتم برابر با سپر بود بیاد به مقدار قدرتمون 15 تا اضافه کنه و بعدش پرینت کنه  🛡️ سپر گرفتی!!
-# # در غیر اینصورت 10 تا از قدرت کم کنه و پرینت کنه  💀 آیتم خراب بود!
+# # if item == "sword" :
+# #     power = power + 30
+# #     print("get sword")
+# # elif item == "shield":
+# #     power = power + 15
+# #     print("get shield")
+# # else:
+# #     power = power - 10
+# #     print("item is broken")
+# # print(power)
+# # #___________________________________________________________________________________________________________________________
+# # #تمرین جدید
+# # game_items = ['sword', 'bow', 'shield']
 
-# # بعد از بلاک کاندیشن پرینت کنه قدرت نهایییمون
+# # power = 0
 
-# power = 50
-# item = ""
+# # if game_items[0] == 'sword':
+# #     power = power + 20
+# #     print("Sword is in hand")
 
-# if item == "sword" :
-#     power = power + 30
-#     print("get sword")
-# elif item == "shield":
-#     power = power + 15
-#     print("get shield")
-# else:
-#     power = power - 10
-#     print("item is broken")
-# print(power)
-# #___________________________________________________________________________________________________________________________
-# #تمرین جدید
-# game_items = ['sword', 'bow', 'shield']
+# # if game_items[1] == 'shield':
+# #     power = power + 10
+# #     print("Can protect")
 
-# power = 0
+# # if game_items[2] == 'bow':
+# #     power = power + 15
+# #     print("Can attack from far")
 
-# if game_items[0] == 'sword':
-#     power = power + 20
-#     print("Sword is in hand")
-
-# if game_items[1] == 'shield':
-#     power = power + 10
-#     print("Can protect")
-
-# if game_items[2] == 'bow':
-#     power = power + 15
-#     print("Can attack from far")
-
-# print("Power is:", power)
+# # print("Power is:", power)
 
 
-# numbers = [5, 23, 17, 30, 12]
+# # numbers = [5, 23, 17, 30, 12]
 
-# for i in numbers:
-#     if i > 18:
-#         print("You can enter")
-#     else:
-#         print("You can not enter")
+# # for i in numbers:
+# #     if i > 18:
+# #         print("You can enter")
+# #     else:
+# #         print("You can not enter")
 
-# #2
-# numbers = [5, 23, 17, 30, 12]
+# # #2
+# # numbers = [5, 23, 17, 30, 12]
 
-# for i in numbers:
-#     if i > 18:
-#         print("You can enter")
-#     else:
-#         print("You can not enter")
+# # for i in numbers:
+# #     if i > 18:
+# #         print("You can enter")
+# #     else:
+# #         print("You can not enter")
 
-#         #3
+# #         #3
 
 
-#         numbers = [20, 18, 15, 9, 12]
+# #         numbers = [20, 18, 15, 9, 12]
 
-# for i in numbers:
+# # for i in numbers:
 
-#     if i >= 18 and i <= 20:
-#         print("Excellent")
+# #     if i >= 18 and i <= 20:
+# #         print("Excellent")
 
-#     elif i >= 15 and i < 18:
-#         print("Medium")
+# #     elif i >= 15 and i < 18:
+# #         print("Medium")
 
-#     elif i >= 10 and i < 15:
-#         print("Not good")
+# #     elif i >= 10 and i < 15:
+# #         print("Not good")
 
-#     else:
-#         print("Fail")
+# #     else:
+# #         print("Fail")
 
-#         #4
-#         far_items = []
+# #         #4
+# #         far_items = []
 
-# game_items = [
-#     'sword',
-#     'bow',
-#     'shield',
-#     'axe',
-#     'crossbow'
-# ]
+# # game_items = [
+# #     'sword',
+# #     'bow',
+# #     'shield',
+# #     'axe',
+# #     'crossbow'
+# # ]
 
-# if game_items[0] == 'bow' or game_items[0] == 'crossbow':
-#     far_items.append(game_items[0])
-# else:
-#     pass
+# # if game_items[0] == 'bow' or game_items[0] == 'crossbow':
+# #     far_items.append(game_items[0])
+# # else:
+# #     pass
 
-# if game_items[1] == 'bow' or game_items[1] == 'crossbow':
-#     far_items.append(game_items[1])
-# else:
-#     pass
+# # if game_items[1] == 'bow' or game_items[1] == 'crossbow':
+# #     far_items.append(game_items[1])
+# # else:
+# #     pass
 
-# if game_items[2] == 'bow' or game_items[2] == 'crossbow':
-#     far_items.append(game_items[2])
-# else:
-#     pass
+# # if game_items[2] == 'bow' or game_items[2] == 'crossbow':
+# #     far_items.append(game_items[2])
+# # else:
+# #     pass
 
-# if game_items[3] == 'bow' or game_items[3] == 'crossbow':
-#     far_items.append(game_items[3])
-# else:
-#     pass
+# # if game_items[3] == 'bow' or game_items[3] == 'crossbow':
+# #     far_items.append(game_items[3])
+# # else:
+# #     pass
 
-# if game_items[4] == 'bow' or game_items[4] == 'crossbow':
-#     far_items.append(game_items[4])
-# else:
-#     pass
+# # if game_items[4] == 'bow' or game_items[4] == 'crossbow':
+# #     far_items.append(game_items[4])
+# # else:
+# #     pass
 
-# print(far_items)
-# #--------------------------------------------------------------------------
-# #تکالیف جذیذ
+# # print(far_items)
+# # #--------------------------------------------------------------------------
+# # #تکالیف جذیذ
 
-# names = [
-#     "علی", "سامیار", "محمد", "حسین", "مهدی",
-#     "امیر", "سارا", "مریم", "نگار", "نرگس",
-#     "زهرا", "فاطمه", "آرمان", "پارسا", "کیان",
-#     "یاسین", "رها", "نازنین", "پریسا", "مهسا"
-# ]
+# # names = [
+# #     "علی", "سامیار", "محمد", "حسین", "مهدی",
+# #     "امیر", "سارا", "مریم", "نگار", "نرگس",
+# #     "زهرا", "فاطمه", "آرمان", "پارسا", "کیان",
+# #     "یاسین", "رها", "نازنین", "پریسا", "مهسا"
+# # ]
+
+# # # for name in names:
+# # #     print(name)
+
+
+# # #----------------------------------
+# # #2
+# # a = [1, 34, 7, 8, 34, 2, 1, 4, 345, 12, 234]
+
+# # for number in a:
+# #     print(number / 2)
+
+
+# # #__________________________________
+# # #3
+# # a = [1, 34, 7, 8, 34, 2, 1, 4, 345, 12, 234]
+
+# # for number in a:
+# #     if number > 10:
+# #         print(number)
+# #         #_________________________________________________________________________
+# # game_items = ['sword', 'bow', 'shield']
+
+# # power = 0
+
+# # for item in game_items:
+# #     if item == 'sword':
+# #         power = power + 20
+# #         print("Sword is in hand")
+
+# #     elif item == 'shield':
+# #         power = power + 10
+# #         print("Can protect")
+
+# #     elif item == 'bow':
+# #         power = power + 15
+# #         print("Can attack from far")
+
+# # print("Power:", power)
+# # #
+# # # _______________________________________________________
+# # numbers = [5, 27, 14, 19, 8]
+
+# # for num in numbers:
+# #     if num > 18:
+# #         print(num, "You can enter")
+# #     else:
+# #         print(num, "You cannot enter")
+# # #_________________________________________________________
+# # numbers = [20, 17, 15, 9, 12]
+
+# # for num in numbers:
+
+# #     if num >= 18 and num <= 20:
+# #         print(num, "Excellent")
+
+# #     elif num >= 15 and num < 18:
+# #         print(num, "Average")
+
+# #     elif num >= 10 and num < 15:
+# #         print(num, "Not good")
+
+# #     else:
+# #         print(num, "Fail")
+# # #________________________________________________________
+# # new_list = []
+
+# # game_items = [
+# #     'sword',
+# #     'bow',
+# #     'shield',
+# #     'axe',
+# #     'crossbow'
+# # ]
+
+
+# # for item in game_items:
+
+# #     if item == 'bow' or item == 'crossbow':
+# #         new_list.append(item)
+
+
+# # print(new_list)
+# # #______________________________________
+# # #1
+# # names = [
+# #     "علی", "رضا", "محمد", "حسین", "مهدی",
+# #     "امیر", "سارا", "مریم", "نگار", "نرگس",
+# #     "زهرا", "فاطمه", "آرمان", "پارسا", "کیان",
+# #     "یاسین", "رها", "نازنین", "پریسا", "مهسا"
+# # ]
 
 # # for name in names:
 # #     print(name)
 
+# #     #_______________________________________________
 
-# #----------------------------------
-# #2
-# a = [1, 34, 7, 8, 34, 2, 1, 4, 345, 12, 234]
-
-# for number in a:
-#     print(number / 2)
+# #     #2
 
 
-# #__________________________________
-# #3
-# a = [1, 34, 7, 8, 34, 2, 1, 4, 345, 12, 234]
+# # a = [1, 34, 7, 8, 34, 2, 1, 4, 345, 12, 234]
 
-# for number in a:
-#     if number > 10:
-#         print(number)
-#         #_________________________________________________________________________
-# game_items = ['sword', 'bow', 'shield']
-
-# power = 0
-
-# for item in game_items:
-#     if item == 'sword':
-#         power = power + 20
-#         print("Sword is in hand")
-
-#     elif item == 'shield':
-#         power = power + 10
-#         print("Can protect")
-
-#     elif item == 'bow':
-#         power = power + 15
-#         print("Can attack from far")
-
-# print("Power:", power)
-# #
-# # _______________________________________________________
-# numbers = [5, 27, 14, 19, 8]
-
-# for num in numbers:
-#     if num > 18:
-#         print(num, "You can enter")
-#     else:
-#         print(num, "You cannot enter")
-# #_________________________________________________________
-# numbers = [20, 17, 15, 9, 12]
-
-# for num in numbers:
-
-#     if num >= 18 and num <= 20:
-#         print(num, "Excellent")
-
-#     elif num >= 15 and num < 18:
-#         print(num, "Average")
-
-#     elif num >= 10 and num < 15:
-#         print(num, "Not good")
-
-#     else:
-#         print(num, "Fail")
-# #________________________________________________________
-# new_list = []
-
-# game_items = [
-#     'sword',
-#     'bow',
-#     'shield',
-#     'axe',
-#     'crossbow'
-# ]
+# # for number in a:
+# #     print(number / 2)
 
 
-# for item in game_items:
+# #     #_________________________________________
+# #     #3
 
-#     if item == 'bow' or item == 'crossbow':
-#         new_list.append(item)
+# # a = [1, 34, 7, 8, 34, 2, 1, 4, 345, 12, 234]
 
+# # for number in a:
+# #     if number > 10:
+# #         print(number)
 
-# print(new_list)
-# #______________________________________
-# #1
-# names = [
-#     "علی", "رضا", "محمد", "حسین", "مهدی",
-#     "امیر", "سارا", "مریم", "نگار", "نرگس",
-#     "زهرا", "فاطمه", "آرمان", "پارسا", "کیان",
-#     "یاسین", "رها", "نازنین", "پریسا", "مهسا"
-# ]
+# # #______________________________________________________________________________________________________________________________
+# # #تمرین اول
+# # name = input("enter your name: ")
 
-# for name in names:
-#     print(name)
-
-#     #_______________________________________________
-
-#     #2
+# # print(type(name))
+# # print(name)
 
 
-# a = [1, 34, 7, 8, 34, 2, 1, 4, 345, 12, 234]
+# # #تمرین دوم
+# # number = input("enter a number: ")
 
-# for number in a:
-#     print(number / 2)
+# # print(type(number))
 
+# # if type(number) == str:
+# #     number = int(number)
 
-#     #_________________________________________
-#     #3
+# # print(type(number))
 
-# a = [1, 34, 7, 8, 34, 2, 1, 4, 345, 12, 234]
+# # #تمرین سوم
+# # number = input("enter a number: ")
 
-# for number in a:
-#     if number > 10:
-#         print(number)
+# # number = int(number)
 
-# #______________________________________________________________________________________________________________________________
-# #تمرین اول
-# name = input("enter your name: ")
+# # if number > 10:
+# #     print("your number is more than 10")
+# # else:
+# #     print("your number is less than 10")
+# # #تمرین چهارم
+# # names = [
+# #     "علی", "محمد", "رضا", "حسین", "مهدی",
+# #     "امیر", "سینا", "آرمان", "سامان", "پویان",
+# #     "فاطمه", "زهرا", "مریم", "سارا", "نگار",
+# #     "نرگس", "الهام", "نازنین", "هانیه", "ریحانه",
+# #     "کیان", "پارسا", "بردیا", "یاسین", "شایان",
+# #     "ترانه", "مهسا", "رها", "نیلوفر", "بهار"
+# # ]
 
-# print(type(name))
-# print(name)
+# # for name in names:
+# #     print(name)
 
+# # #تمرین گنجم
 
-# #تمرین دوم
-# number = input("enter a number: ")
+# # c = [12, 23, 454, 23, 12, 1, 23, 4, 45, 6, 7, 8, 45, 2, 12]
 
-# print(type(number))
+# # new_list = []
 
-# if type(number) == str:
-#     number = int(number)
+# # for number in c:
+# #     if number < 10:
+# #         new_list.append(number)
 
-# print(type(number))
+# # print(new_list)
 
-# #تمرین سوم
-# number = input("enter a number: ")
-
-# number = int(number)
-
-# if number > 10:
-#     print("your number is more than 10")
-# else:
-#     print("your number is less than 10")
-# #تمرین چهارم
-# names = [
-#     "علی", "محمد", "رضا", "حسین", "مهدی",
-#     "امیر", "سینا", "آرمان", "سامان", "پویان",
-#     "فاطمه", "زهرا", "مریم", "سارا", "نگار",
-#     "نرگس", "الهام", "نازنین", "هانیه", "ریحانه",
-#     "کیان", "پارسا", "بردیا", "یاسین", "شایان",
-#     "ترانه", "مهسا", "رها", "نیلوفر", "بهار"
-# ]
-
-# for name in names:
-#     print(name)
-
-# #تمرین گنجم
-
-# c = [12, 23, 454, 23, 12, 1, 23, 4, 45, 6, 7, 8, 45, 2, 12]
-
-# new_list = []
-
-# for number in c:
-#     if number < 10:
-#         new_list.append(number)
-
-# print(new_list)
-
-# #تمرین شیشم
-def tamrin_3():
-    my_number = 7
-
-    number = input("enter a number: ")
-
-    number = int(number)
-
-    if number == my_number:
-        print("your number is correct")
-    else:
-        print("your number is wrong")
-
-
-tamrin_3()
-
-# #_______________________________________________________________________________________________________________________
-# #تکلیف جدید
-
-# # یک متغیر داریم به اسم score
-# # مقدار آن برابر 0 است
-# #score = 0
-
-# # یک متغیر دیگر داریم به اسم correct_number
-# # یعنی عدد درست
-# #correct_number = 10
-
-# # از یوزر با input یک عدد بگیر
-# # و آن را بررسی کن که عدد درست است یا نه
-
-# # اگر عدد درست را وارد کرد:
-# # یک امتیاز به score اضافه کن
-
-# # در غیر این صورت:
-# # یک امتیاز از score کم کن
-
-# # در نهایت خارج از بلاک:
-# # score را print کن
-
-
+# # #تمرین شیشم
 # def tamrin_3():
-#     score = 0
-#     correct_number = 10
+#     my_number = 7
 
-#     number = int(input("Enter number: "))
+#     number = input("enter a number: ")
 
-#     if number == correct_number:
-#         score = score + 1
-#     else:
-#         score = score - 1
 
-#     print(score)
+# tamrin_3()
 
-# # ________________________________________________________________________________________________________________________________________________
-# # تمرین جدید
+# # #_______________________________________________________________________________________________________________________
+# # تکلیف جدید
 
-# # از یوزر سنش رو بگیر
-# # مجدد از یوزر اسمش هم بگیر
-# # و پرینت کن تایپاشون رو و همینطور خودشون رو
-# # سن رو بعدش تبدیل کن به int و مجدد پرینتش کن
+# # # یک متغیر داریم به اسم score
+# # # مقدار آن برابر 0 است
+# # #score = 0
 
+# # # یک متغیر دیگر داریم به اسم correct_number
+# # # یعنی عدد درست
+# # #correct_number = 10
 
-# def tamrin_4():
-#     age = input("Enter your age: ")
-#     name = input("Enter your name: ")
+# # # از یوزر با input یک عدد بگیر
+# # # و آن را بررسی کن که عدد درست است یا نه
 
-#     print(age)
-#     print(type(age))
+# # # اگر عدد درست را وارد کرد:
+# # # یک امتیاز به score اضافه کن
 
-#     print(name)
-#     print(type(name))
+# # # در غیر این صورت:
+# # # یک امتیاز از score کم کن
 
-#     age = int(age)
+# # # در نهایت خارج از بلاک:
+# # # score را print کن
 
-#     print(age)
-#     print(type(age))
 
+# # def tamrin_3():
+# #     score = 0
+# #     correct_number = 10
 
-# # #________________________________________________________________________
-# # #تمرین جدید
-# def tamrin_5():
-#     age = int(input("سن خود را وارد کنید: "))
+# #     number = int(input("Enter number: "))
 
-#     if age < 10:
-#         print(" javan hast")
-#     elif age <= 20:
-#         print("nojavan")
-#     else:
-#         print("pir")
+# #     if number == correct_number:
+# #         score = score + 1
+# #     else:
+# #         score = score - 1
 
+# #     print(score)
 
-# # #_________________________________________________________________________________________________________________________________________
-# # #تمرین جدید
-# def tamrin_6():
-#     list_a = [1, 23, 3, 2, 12, 4, 5, 34, 1, 1, 5, 445, 56, 7, 64, 2, 3, 4]
+# # # ________________________________________________________________________________________________________________________________________________
+# # # تمرین جدید
 
-#     greater_than_10 = []
-#     less_than_10 = []
+# # # از یوزر سنش رو بگیر
+# # # مجدد از یوزر اسمش هم بگیر
+# # # و پرینت کن تایپاشون رو و همینطور خودشون رو
+# # # سن رو بعدش تبدیل کن به int و مجدد پرینتش کن
 
-#     for x in list_a:
-#         if x > 10:
-#             greater_than_10.append(x)
 
-#         if x < 10:
-#             less_than_10.append(x)
+# # def tamrin_4():
+# #     age = input("Enter your age: ")
+# #     name = input("Enter your name: ")
 
-#     print(greater_than_10)
-#     print(less_than_10)
+# #     print(age)
+# #     print(type(age))
 
+# #     print(name)
+# #     print(type(name))
 
-# # ۲
-# # از لیست زبر مقادیری که بزرگ تر از ۱۰ هست رو به یک لیست جدید اضافه کن
-# def tamrrin_7():
-#     a = [34, 2, 5, 34, 78, 6, 5, 13, 15, 19, 67, 5, 9]
+# #     age = int(age)
 
-#     users_age = [12, 23, 43]
-#     users_name = ['maryam', 'morteza', 'mirza']
+# #     print(age)
+# #     print(type(age))
 
-#     name = input("اسم را وارد کنید: ")
-#     age = int(input("سن را وارد کنید: "))
 
-#     users_name.append(name)
-#     users_age.append(age)
+# # # #________________________________________________________________________
+# # # #تمرین جدید
+# # def tamrin_5():
+# #     age = int(input("سن خود را وارد کنید: "))
 
-#     print(users_name)
-#     print(users_age)
+# #     if age < 10:
+# #         print(" javan hast")
+# #     elif age <= 20:
+# #         print("nojavan")
+# #     else:
+# #         print("pir")
 
-# # #________________________________________________________________________________________________________________________
 
+# # # #_________________________________________________________________________________________________________________________________________
+# # # #تمرین جدید
+# # def tamrin_6():
+# #     list_a = [1, 23, 3, 2, 12, 4, 5, 34, 1, 1, 5, 445, 56, 7, 64, 2, 3, 4]
 
-# def tamrin_8():
-#     a = [34, 2, 5, 34, 78, 6, 5, 13, 15, 19, 67, 5, 9]
+# #     greater_than_10 = []
+# #     less_than_10 = []
 
-#     new_list = []
+# #     for x in list_a:
+# #         if x > 10:
+# #             greater_than_10.append(x)
 
-#     for i in a:
-#         if i > 10:
-#             new_list.append(i)
+# #         if x < 10:
+# #             less_than_10.append(x)
 
-#     print(new_list)
+# #     print(greater_than_10)
+# #     print(less_than_10)
 
 
-# def tamrin_9():
-#     a = [34, 2, 5, 34, 78, 6, 5, 13, 15, 19, 67, 5, 9]
-#     b = []
-#     for ooo in a:
-#         if ooo > 10:
-#             b.append(ooo)
-#     print(b)
+# # # ۲
+# # # از لیست زبر مقادیری که بزرگ تر از ۱۰ هست رو به یک لیست جدید اضافه کن
+# # def tamrrin_7():
+# #     a = [34, 2, 5, 34, 78, 6, 5, 13, 15, 19, 67, 5, 9]
 
+# #     users_age = [12, 23, 43]
+# #     users_name = ['maryam', 'morteza', 'mirza']
 
-# def tamrin_10():
-#     a = None
-#     ooo = input("adad ra vard kon : ")
-#     ooo = int(ooo)
-#     if ooo < 10:
-#         a = "kodak"
-#     elif ooo > 10:
-#         a = "pir"
-#     print(a)
+# #     name = input("اسم را وارد کنید: ")
+# #     age = int(input("سن را وارد کنید: "))
 
+# #     users_name.append(name)
+# #     users_age.append(age)
 
-# def tamrin_akhar():
-#     b = [12, 1, 2, 23, 3, 2, 1, 23, 4, 3, 2, 34, 32, 234, 234]
+# #     print(users_name)
+# #     print(users_age)
 
-#     ccc = int(input("meghdar 1 : "))
+# # # #________________________________________________________________________________________________________________________
 
-#     ooo = int(input("meghdar 2 : "))
 
-#     fff = ooo + ccc
+# # def tamrin_8():
+# #     a = [34, 2, 5, 34, 78, 6, 5, 13, 15, 19, 67, 5, 9]
 
-#     if fff > 10:
-#         b.append(fff)
+# #     new_list = []
 
-# # ________________________________________________________________________________________________________________________________________
+# #     for i in a:
+# #         if i > 10:
+# #             new_list.append(i)
 
+# #     print(new_list)
 
-# def jam_adad(a, b, c):
-#     jam = a + b + c
-#     print(jam)
 
+# # def tamrin_9():
+# #     a = [34, 2, 5, 34, 78, 6, 5, 13, 15, 19, 67, 5, 9]
+# #     b = []
+# #     for ooo in a:
+# #         if ooo > 10:
+# #             b.append(ooo)
+# #     print(b)
 
-# jam_adad(2, 3, 4)
-# jam_adad(10, 5, 2)
-# jam_adad(1, 1, 8)
 
-# a = int(input("سنتو بده : "))
-# print(a)
+# # def tamrin_10():
+# #     a = None
+# #     ooo = input("adad ra vard kon : ")
+# #     ooo = int(ooo)
+# #     if ooo < 10:
+# #         a = "kodak"
+# #     elif ooo > 10:
+# #         a = "pir"
+# #     print(a)
 
 
-# def sen():
-#     a = int(input("سنتو بده : "))
-#     print(a)
+# # def tamrin_akhar():
+# #     b = [12, 1, 2, 23, 3, 2, 1, 23, 4, 3, 2, 34, 32, 234, 234]
 
+# #     ccc = int(input("meghdar 1 : "))
 
-# sen()
+# #     ooo = int(input("meghdar 2 : "))
 
-# # __________________________________________________________________________________________________________________________
-# # 1
+# #     fff = ooo + ccc
 
+# #     if fff > 10:
+# #         b.append(fff)
 
-# def jam_adad(a, b, c):
-#     print(a + b + c)
+# # # ________________________________________________________________________________________________________________________________________
 
 
-# jam_adad(2, 3, 4)
-# jam_adad(5, 5, 5)
-# jam_adad(10, 20, 30)
+# # def jam_adad(a, b, c):
+# #     jam = a + b + c
+# #     print(jam)
 
 
-# # 2
-# def sen():
-#     a = int(input("سنتو بده : "))
-#     print(a)
+# # jam_adad(2, 3, 4)
+# # jam_adad(10, 5, 2)
+# # jam_adad(1, 1, 8)
 
+# # a = int(input("سنتو بده : "))
+# # print(a)
 
-# sen()
 
+# # def sen():
+# #     a = int(input("سنتو بده : "))
+# #     print(a)
 
-# # 3
-# a = 100
 
-# x = int(input("عدد اول: "))
-# y = int(input("عدد دوم: "))
-# z = int(input("عدد سوم: "))
+# # sen()
 
-# jam = x + y + z
+# # # __________________________________________________________________________________________________________________________
+# # # 1
 
-# if jam > a:
-#     print("ok")
-# else:
-#     print("no")
 
+# # def jam_adad(a, b, c):
+# #     print(a + b + c)
 
-# # 4
-# multiplied = [4, 6, 8, 7, 6]
 
-# x = int(input("یک عدد بده: "))
-# x = x * 2
+# # jam_adad(2, 3, 4)
+# # jam_adad(5, 5, 5)
+# # jam_adad(10, 20, 30)
 
-# multiplied.append(x)
 
-# print(multiplied)
+# # # 2
+# # def sen():
+# #     a = int(input("سنتو بده : "))
+# #     print(a)
 
-# #_____________________________________________________________________________________________________________________________________________________________
 
-# def kam():
-#     a = int(input("adad 1: "))
-#     b = int(input("adad 2: "))
-#     c = int(input("adad 3: "))
-#     d = int(input("adad 4: "))
+# # sen()
 
-#     javab = a - b - c - d
 
-#     print(javab)
+# # # 3
+# # a = 100
 
-# kam()
+# # x = int(input("عدد اول: "))
+# # y = int(input("عدد دوم: "))
+# # z = int(input("عدد سوم: "))
 
-# #__________________________________________________________________________________________________________________________________________
+# # jam = x + y + z
 
-# a = [1,2,334,5,4,3,12,23,544,1,32,2,54,5,65]
+# # if jam > a:
+# #     print("ok")
+# # else:
+# #     print("no")
 
-# b = []
 
-# for i in a:
-#     b.append(i * 2)
+# # # 4
+# # multiplied = [4, 6, 8, 7, 6]
 
-# print(b)
+# # x = int(input("یک عدد بده: "))
+# # x = x * 2
 
-# #_______________________________________________________________________________________________________________________________________________________
+# # multiplied.append(x)
 
-# def welcome(name):
-#     print("welcome", name)
+# # print(multiplied)
 
-# welcome("Samyar")
+# # #_____________________________________________________________________________________________________________________________________________________________
 
-# #_________________________________________________________________________________________________________________________________
-# def zarb(adad):
-#     adad = adad * 2
-#     print(adad)
+# # def kam():
+# #     a = int(input("adad 1: "))
+# #     b = int(input("adad 2: "))
+# #     c = int(input("adad 3: "))
+# #     d = int(input("adad 4: "))
 
-# zarb(5)
+# #     javab = a - b - c - d
 
-# #_______________________________________________________________________________________________________________________________________________
+# #     print(javab)
 
-# def zarb(a, b):
-#     javab = a * b
-#     print(javab)
+# # kam()
 
+# # #__________________________________________________________________________________________________________________________________________
 
+# # a = [1,2,334,5,4,3,12,23,544,1,32,2,54,5,65]
 
-#_____________________________________________________________________________________________________________________________________________
+# # b = []
 
-# def zarb(a, b):
-#     javab = a * b
-#     return javab
+# # for i in a:
+# #     b.append(i * 2)
 
-# x = int(input("Enter number 1: "))
-# y = int(input("Enter number 2: "))
+# # print(b)
 
-# natije = zarb(x, y)
+# # #_______________________________________________________________________________________________________________________________________________________
 
-# print(natije)
+# # def welcome(name):
+# #     print("welcome", name)
 
+# # welcome("Samyar")
 
+# # #_________________________________________________________________________________________________________________________________
+# # def zarb(adad):
+# #     adad = adad * 2
+# #     print(adad)
 
-# #_____________________________________________________________________________________________________________________________________
-# #برای جبران تمرینات
-# def jam(a, b):
-#     return a + b
+# # zarb(5)
 
-# a = int(input("Number: "))
-# b = int(input("Number: "))
+# # #_______________________________________________________________________________________________________________________________________________
 
-# javab = jam(a, b)
+# # def zarb(a, b):
+# #     javab = a * b
+# #     print(javab)
 
-# print(javab)
 
-#______________________________________________________________________________________________________________________________________
 
-def age(user_age):
-    if user_age < 10:
-        return "کودک"
-    else:
-        return "پیر"
+# #_____________________________________________________________________________________________________________________________________________
 
-print(age(8))
+# # def zarb(a, b):
+# #     javab = a * b
+# #     return javab
 
-#___________________________________________________________________________________________________________________________________________________
-import math
+# # x = int(input("Enter number 1: "))
+# # y = int(input("Enter number 2: "))
 
-number = int(input("یک عدد وارد کن: "))
+# # natije = zarb(x, y)
 
-result = math.pow(number, 4)
+# # print(natije)
 
-print(result)
+
+
+# # #_____________________________________________________________________________________________________________________________________
+# # #برای جبران تمرینات
+# # def jam(a, b):
+# #     return a + b
+
+# # a = int(input("Number: "))
+# # b = int(input("Number: "))
+
+# # javab = jam(a, b)
+
+# # print(javab)
+
+# #______________________________________________________________________________________________________________________________________
+
+# # def age(user_age):
+# #     if user_age < 10:
+# #         return "کودک"
+# #     else:
+# #         return "پیر"
+
+# # print(age(8))
+
+# #___________________________________________________________________________________________________________________________________________________
+# # import math
+
+# # number = int(input("yek adad vared kon "))
+
+# # result = math.pow(number, 4)
+
+# # print(result)
+
+
+#____________________________________________________________________________________________________________________________________________________________________________
+
+# import math
+
+# def ooo(x):
+#     return math.pow(x, 2)
+
+# number = int(input("adad ra vared konid : "))
+
+# print(ooo(number))
+
+# import math
+
+# def power_two(number):
+#     return math.pow(number, 2)
+
+# number = int(input())
+# print(power_two(number))
+
+
+
+#_________________________________________________________________________________________________________________________________________________________________________________________________
+
+
+
+from PySide6.QtWidgets import QApplication, QPushButton
+
+app = QApplication()
+
+button = QPushButton("docme")
+
+button.show()
+
+app.exec()
