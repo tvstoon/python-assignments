@@ -772,14 +772,20 @@
 
 #_________________________________________________________________________________________________________________________________________________________________________________________________
 
+# from PySide6.QtWidgets import QApplication, QPushButton
+
+# app = QApplication()
+
+# button = QPushButton("Click kon")
+
+# button.show()
+
+# app.exec()
 
 
-from PySide6.QtWidgets import QApplication, QPushButton
+#___________________________________________________________________________________________________________________________________________________________________
 
-app = QApplication()
 
-button = QPushButton("docme")
 
-button.show()
-
-app.exec()
+def check_names(name1, name2):
+    return name1 == name2
