@@ -1,21 +1,21 @@
-# import math
-# def ooo(a , b):
+import math
+def ooo(a , b):
 
-#     eee = math.pow(a , b)
-#     return eee
+    eee = math.pow(a , b)
+    return eee
 
-# lll = ooo(15 , 25)
-# lll = ooo(2 , 3)
-# print(lll)
-# import random
+lll = ooo(15 , 25)
+lll = ooo(2 , 3)
+print(lll)
+import random
 
-# ooo = range(100)
-# e = []
-# for a in ooo :
-#     c = random.randint(0 , 100)
-#     e.append(c)
+ooo = range(100)
+e = []
+for a in ooo :
+    c = random.randint(0 , 100)
+    e.append(c)
 
-# print(e)
+print(e)
 
 
 

@@ -772,14 +772,47 @@
 
 #_________________________________________________________________________________________________________________________________________________________________________________________________
 
+# from PySide6.QtWidgets import QApplication, QPushButton
+
+# app = QApplication()
+
+# button = QPushButton("Click kon")
+
+# button.show()
+
+# app.exec()
 
 
-from PySide6.QtWidgets import QApplication, QPushButton
+#___________________________________________________________________________________________________________________________________________________________________
 
-app = QApplication()
 
-button = QPushButton("docme")
 
-button.show()
+# def check_names(name1, name2):
+#     return name1 == name2
 
-app.exec()
+
+
+#________________________________________________________________________________________________________________________________________________________________
+
+
+
+
+import sys
+from PySide6.QtWidgets import QApplication, QWidget, QLabel, QPushButton, QHBoxLayout
+
+a = QApplication(sys.argv)
+
+w = QWidget()
+w.resize(250, 120)
+
+l = QLabel("TextLabel")
+b = QPushButton("PushButton")
+
+x = QHBoxLayout()
+x.addWidget(l)
+x.addWidget(b)
+
+w.setLayout(x)
+w.show()
+
+sys.exit(a.exec())
