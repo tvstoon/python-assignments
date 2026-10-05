@@ -797,22 +797,57 @@
 
 
 
-import sys
-from PySide6.QtWidgets import QApplication, QWidget, QLabel, QPushButton, QHBoxLayout
+# import sys
+# from PySide6.QtWidgets import QApplication, QWidget, QLabel, QPushButton, QHBoxLayout
 
-a = QApplication(sys.argv)
+# a = QApplication(sys.argv)
 
-w = QWidget()
-w.resize(250, 120)
+# w = QWidget()
+# w.resize(250, 120)
 
-l = QLabel("TextLabel")
-b = QPushButton("PushButton")
+# l = QLabel("TextLabel")
+# b = QPushButton("PushButton")
 
-x = QHBoxLayout()
-x.addWidget(l)
-x.addWidget(b)
+# x = QHBoxLayout()
+# x.addWidget(l)
+# x.addWidget(b)
 
-w.setLayout(x)
-w.show()
+# w.setLayout(x)
+# w.show()
 
-sys.exit(a.exec())
+# sys.exit(a.exec())
+
+
+
+
+
+
+
+
+from PySide6.QtWidgets import QApplication, QPushButton, QLabel, QWidget, QVBoxLayout, QLineEdit
+
+
+app = QApplication()
+
+window = QWidget()
+
+button_1 = QPushButton("pushbutton")
+button_2 = QPushButton("pushbutton")
+label_1 = QLabel("username")
+lineedit_1 = QLineEdit()
+label_2 = QLabel("password")
+lineedit_2 = QLineEdit()
+
+box = QVBoxLayout()
+
+box.addWidget(label_1)
+box.addWidget(lineedit_1)
+box.addWidget(label_2)
+box.addWidget(lineedit_2)
+box.addWidget(button_1)
+box.addWidget(button_2)
+
+window.setLayout(box)
+
+window.show()
+app.exec()
