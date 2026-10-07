@@ -847,17 +847,17 @@ box = QVBoxLayout()
 
 box_1 = QHBoxLayout()
 
+box_2 = QHBoxLayout()
+
+box_3 = QHBoxLayout()
+
 box_1.addWidget(label_1)
 
 box_1.addWidget(lineedit_1)
 
-box_2 = QHBoxLayout()
-
 box_2.addWidget(label_2)
 
 box_2.addWidget(lineedit_2)
-
-box_3 = QHBoxLayout()
 
 box_3.addWidget(button_1)
 
