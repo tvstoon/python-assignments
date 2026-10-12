@@ -824,6 +824,60 @@
 
 
 
+# from PySide6.QtWidgets import QApplication, QPushButton, QLabel, QWidget, QVBoxLayout, QHBoxLayout, QLineEdit
+
+
+# app = QApplication()
+
+# window = QWidget()
+
+# button_1 = QPushButton("pushbutton")
+
+# button_2 = QPushButton("pushbutton")
+
+# label_1 = QLabel("username")
+
+# lineedit_1 = QLineEdit()
+
+# label_2 = QLabel("password")
+
+# lineedit_2 = QLineEdit()
+
+# box = QVBoxLayout()
+
+# box_1 = QHBoxLayout()
+
+# box_2 = QHBoxLayout()
+
+# box_3 = QHBoxLayout()
+
+# box_1.addWidget(label_1)
+
+# box_1.addWidget(lineedit_1)
+
+# box_2.addWidget(label_2)
+
+# box_2.addWidget(lineedit_2)
+
+# box_3.addWidget(button_1)
+
+# box_3.addWidget(button_2)
+
+# box.addLayout(box_1)
+
+# box.addLayout(box_2)
+
+# box.addLayout(box_3)
+
+# window.setLayout(box)
+
+# window.show()
+
+# app.exec()
+
+
+
+
 from PySide6.QtWidgets import QApplication, QPushButton, QLabel, QWidget, QVBoxLayout, QHBoxLayout, QLineEdit
 
 
@@ -831,43 +885,47 @@ app = QApplication()
 
 window = QWidget()
 
-button_1 = QPushButton("pushbutton")
-
-button_2 = QPushButton("pushbutton")
 
 label_1 = QLabel("username")
-
 lineedit_1 = QLineEdit()
 
 label_2 = QLabel("password")
-
 lineedit_2 = QLineEdit()
+
+label_3 = QLabel("Age")
+lineedit_3 = QLineEdit()
+
+
+button_1 = QPushButton("cancel")
+button_2 = QPushButton("create")
+
 
 box = QVBoxLayout()
 
 box_1 = QHBoxLayout()
-
 box_2 = QHBoxLayout()
-
 box_3 = QHBoxLayout()
+box_4 = QHBoxLayout()
+
 
 box_1.addWidget(label_1)
-
 box_1.addWidget(lineedit_1)
 
 box_2.addWidget(label_2)
-
 box_2.addWidget(lineedit_2)
 
-box_3.addWidget(button_1)
+box_3.addWidget(label_3)
+box_3.addWidget(lineedit_3)
 
-box_3.addWidget(button_2)
+box_4.addWidget(button_1)
+box_4.addWidget(button_2)
+
 
 box.addLayout(box_1)
-
 box.addLayout(box_2)
-
 box.addLayout(box_3)
+box.addLayout(box_4)
+
 
 window.setLayout(box)
 
