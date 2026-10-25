@@ -1,25 +1,25 @@
-from PySide6.QtWidgets import QApplication, QPushButton, QLabel, QWidget, QHBoxLayout, QLineEdit
+# from PySide6.QtWidgets import QApplication, QPushButton, QLabel, QWidget, QHBoxLayout, QLineEdit
 
 
-app = QApplication()
+# app = QApplication()
 
-window = QWidget()
+# window = QWidget()
 
-button = QPushButton("کلیک کن")
-label = QLabel("نا کاربری  : ")
+# button = QPushButton("کلیک کن")
+# label = QLabel("نا کاربری  : ")
 
-lineedit = QLineEdit()
+# lineedit = QLineEdit()
 
-box = QHBoxLayout()
+# box = QHBoxLayout()
 
-box.addWidget(label)
-box.addWidget(lineedit)
-box.addWidget(button)
+# box.addWidget(label)
+# box.addWidget(lineedit)
+# box.addWidget(button)
 
-window.setLayout(box)
+# window.setLayout(box)
 
-window.show()
-app.exec()
+# window.show()
+# app.exec()
 
 # from PySide6.QtWidgets import QApplication, QWidget, QHBoxLayout, QComboBox
 

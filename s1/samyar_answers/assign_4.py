@@ -940,54 +940,115 @@
 
 
 
-from PySide6.QtWidgets import QApplication, QPushButton, QWidget, QVBoxLayout, QHBoxLayout , QCheckBox
+# from PySide6.QtWidgets import QApplication, QPushButton, QWidget, QVBoxLayout, QHBoxLayout , QCheckBox
 
+
+# app = QApplication()
+
+# window = QWidget()
+
+# checkbox_1 = QCheckBox("دریافت فاکتور دیجیتال")
+# checkbox_2 = QCheckBox("استفاده از کد تخفیف")
+# checkbox_3 = QCheckBox("پذیرفتن قوانین خرید")
+
+
+
+
+# button_1 = QPushButton("انصراف")
+# button_2 = QPushButton("خرید")
+
+
+# box = QHBoxLayout()
+# box_1 = QVBoxLayout()
+# box_2 = QVBoxLayout()
+# box_3 = QVBoxLayout()
+# box_4 = QVBoxLayout()
+
+
+
+
+
+# box_3.addWidget(checkbox_3)
+
+# box_1.addWidget(checkbox_1)
+# box_2.addWidget(checkbox_2)
+
+
+# box_4.addWidget(button_1)
+# box_4.addWidget(button_2)
+
+
+# box.addLayout(box_1)
+
+# box.addLayout(box_2)
+
+# box.addLayout(box_3)
+
+# box.addLayout(box_4)
+
+# window.setLayout(box)
+
+# window.show()
+
+# app.exec()
+
+
+# import sys
+# from PySide6.QtWidgets import *
+
+# app = QApplication(sys.argv)
+
+# win = QWidget()
+# win.setWindowTitle("Form")
+# l = QGridLayout(win)
+
+# l.addWidget(QLabel("username"))
+# l.addWidget(QLineEdit())
+# l.addWidget(QPushButton("Check"))
+
+# l.addWidget(QLabel("Password"))
+# p = QLineEdit()
+# p.setEchoMode(QLineEdit.Password)
+# l.addWidget(p)
+# l.addWidget(QPushButton("Check"))
+
+# l.addWidget(QLabel("bio"))
+# l.addWidget(QTextEdit())
+
+# win.show()
+# sys.exit(app.exec())
+
+
+
+import sys
+from PySide6.QtWidgets import *
 
 app = QApplication()
 
-window = QWidget()
-
-checkbox_1 = QCheckBox("دریافت فاکتور دیجیتال")
-checkbox_2 = QCheckBox("استفاده از کد تخفیف")
-checkbox_3 = QCheckBox("پذیرفتن قوانین خرید")
+win = QWidget()
 
 
+layout = QVBoxLayout()
 
+user = QLabel("username")
+name = QLineEdit()
 
-button_1 = QPushButton("انصراف")
-button_2 = QPushButton("خرید")
+password = QLabel("password")
+pas = QLineEdit()
 
+check = QPushButton("Check")
+bio = QLabel("bio")
+text = QTextEdit()
 
-box = QHBoxLayout()
-box_1 = QVBoxLayout()
-box_2 = QVBoxLayout()
-box_3 = QVBoxLayout()
-box_4 = QVBoxLayout()
+layout.addWidget(user)
+layout.addWidget(name)
+layout.addWidget(password)
+layout.addWidget(pas)
+layout.addWidget(check)
+layout.addWidget(bio)
+layout.addWidget(text)
 
+win.setLayout(layout)
+win.show()
 
-
-
-
-box_3.addWidget(checkbox_3)
-
-box_1.addWidget(checkbox_1)
-box_2.addWidget(checkbox_2)
-
-
-box_4.addWidget(button_1)
-box_4.addWidget(button_2)
-
-
-box.addLayout(box_1)
-
-box.addLayout(box_2)
-
-box.addLayout(box_3)
-
-box.addLayout(box_4)
-
-window.setLayout(box)
-
-window.show()
-
-app.exec()
+sys.exit(app.exec())
