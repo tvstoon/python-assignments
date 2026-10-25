@@ -1020,7 +1020,7 @@
 
 
 
-import sys
+
 from PySide6.QtWidgets import *
 
 app = QApplication()
@@ -1050,5 +1050,4 @@ layout.addWidget(text)
 
 win.setLayout(layout)
 win.show()
-
-sys.exit(app.exec())
+app.exec()
