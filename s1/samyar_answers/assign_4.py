@@ -1021,33 +1021,41 @@
 
 
 
-from PySide6.QtWidgets import *
+from PySide6.QtWidgets import QWidget, QApplication, QVBoxLayout, QLabel, QLineEdit, QPushButton, QTextEdit, QHBoxLayout
 
 app = QApplication()
 
 win = QWidget()
 
+layout_1 = QVBoxLayout()
 
-layout = QVBoxLayout()
-
+layout_user = QHBoxLayout()
 user = QLabel("username")
 name = QLineEdit()
+check_1 = QPushButton("Check")
 
-password = QLabel("password")
+layout_user.addWidget(user)
+layout_user.addWidget(name)
+layout_user.addWidget(check_1)
+
+layout_pass = QHBoxLayout()
+password = QLabel("Password")
 pas = QLineEdit()
+check_2 = QPushButton("Check")
 
-check = QPushButton("Check")
+layout_pass.addWidget(password)
+layout_pass.addWidget(pas)
+layout_pass.addWidget(check_2)
+
 bio = QLabel("bio")
 text = QTextEdit()
 
-layout.addWidget(user)
-layout.addWidget(name)
-layout.addWidget(password)
-layout.addWidget(pas)
-layout.addWidget(check)
-layout.addWidget(bio)
-layout.addWidget(text)
+layout_1.addLayout(layout_user)
+layout_1.addLayout(layout_pass)
+layout_1.addWidget(bio)
+layout_1.addWidget(text)
 
-win.setLayout(layout)
+win.setLayout(layout_1)
 win.show()
+
 app.exec()
