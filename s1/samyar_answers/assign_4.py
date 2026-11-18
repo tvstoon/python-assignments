@@ -1021,41 +1021,72 @@
 
 
 
-from PySide6.QtWidgets import QWidget, QApplication, QVBoxLayout, QLabel, QLineEdit, QPushButton, QTextEdit, QHBoxLayout
+# from PySide6.QtWidgets import QWidget, QApplication, QVBoxLayout, QLabel, QLineEdit, QPushButton, QTextEdit, QHBoxLayout
+
+# app = QApplication()
+
+# win = QWidget()
+
+# layout_1 = QVBoxLayout()
+
+# layout_user = QHBoxLayout()
+# user = QLabel("username")
+# name = QLineEdit()
+# check_1 = QPushButton("Check")
+
+# layout_user.addWidget(user)
+# layout_user.addWidget(name)
+# layout_user.addWidget(check_1)
+
+# layout_pass = QHBoxLayout()
+# password = QLabel("Password")
+# pas = QLineEdit()
+# check_2 = QPushButton("Check")
+
+# layout_pass.addWidget(password)
+# layout_pass.addWidget(pas)
+# layout_pass.addWidget(check_2)
+
+# bio = QLabel("bio")
+# text = QTextEdit()
+
+# layout_1.addLayout(layout_user)
+# layout_1.addLayout(layout_pass)
+# layout_1.addWidget(bio)
+# layout_1.addWidget(text)
+
+# win.setLayout(layout_1)
+# win.show()
+
+# app.exec()
+
+
+
+a = ["ali" , "javad" , "mohsen" , "maryam" , "mahnaz" , "rajab" ]
+
+
+from PySide6.QtWidgets import QWidget, QApplication, QVBoxLayout, QLabel, QLineEdit, QPushButton, QHBoxLayout
 
 app = QApplication()
 
-win = QWidget()
+widget = QWidget()
 
-layout_1 = QVBoxLayout()
+vb = QVBoxLayout()
 
-layout_user = QHBoxLayout()
-user = QLabel("username")
-name = QLineEdit()
-check_1 = QPushButton("Check")
+label = QLabel()
 
-layout_user.addWidget(user)
-layout_user.addWidget(name)
-layout_user.addWidget(check_1)
+linedit = QLineEdit()
 
-layout_pass = QHBoxLayout()
-password = QLabel("Password")
-pas = QLineEdit()
-check_2 = QPushButton("Check")
+button = QPushButton()
 
-layout_pass.addWidget(password)
-layout_pass.addWidget(pas)
-layout_pass.addWidget(check_2)
+hb = QHBoxLayout()
 
-bio = QLabel("bio")
-text = QTextEdit()
 
-layout_1.addLayout(layout_user)
-layout_1.addLayout(layout_pass)
-layout_1.addWidget(bio)
-layout_1.addWidget(text)
+for l in a :
+    button = l
+    vb.addWidget(button)
 
-win.setLayout(layout_1)
-win.show()
+widget.setLayout(vb)
+widget.show()
 
 app.exec()

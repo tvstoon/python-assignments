@@ -44,24 +44,61 @@
 
 # app.exec()
 
-from PySide6.QtWidgets import QApplication, QHBoxLayout, QVBoxLayout, QCheckBox, QWidget, QRadioButton, QTextEdit
+# from PySide6.QtWidgets import QApplication, QHBoxLayout, QVBoxLayout, QCheckBox, QWidget, QRadioButton, QTextEdit
 
 
-app = QApplication()
-wgt = QWidget()
+# app = QApplication()
+# wgt = QWidget()
 
-checkbox = QCheckBox("active")
-radio_1 = QRadioButton("پذیرش قوانین")
-radio_2 = QRadioButton("خرید")
-radio_3 = QRadioButton("لغو")
-text_edit = QTextEdit()
+# checkbox = QCheckBox("active")
+# radio_1 = QRadioButton("پذیرش قوانین")
+# radio_2 = QRadioButton("خرید")
+# radio_3 = QRadioButton("لغو")
+# text_edit = QTextEdit()
+# v_box = QVBoxLayout()
+
+# v_box.addWidget(checkbox)
+# v_box.addWidget(radio_1)
+# v_box.addWidget(radio_2)
+# v_box.addWidget(radio_3)
+# v_box.addWidget(text_edit)
+# wgt.setLayout(v_box)
+# wgt.show()
+# app.exec()
+
+
+
+
+import sys
+from PySide6.QtWidgets import QApplication, QWidget, QPushButton, QVBoxLayout, QHBoxLayout
+
+app = QApplication(sys.argv)
+
+window = QWidget()
+window.setWindowTitle("My App")
+window.resize(210, 200)
+
+home = QPushButton("Home")
+contact = QPushButton("Contact")
+about = QPushButton("About")
+exit_btn = QPushButton("Exit")
+login = QPushButton("Log in")
+
 v_box = QVBoxLayout()
+h_box = QHBoxLayout()
 
-v_box.addWidget(checkbox)
-v_box.addWidget(radio_1)
-v_box.addWidget(radio_2)
-v_box.addWidget(radio_3)
-v_box.addWidget(text_edit)
-wgt.setLayout(v_box)
-wgt.show()
-app.exec()
+v_box.addWidget(home)
+v_box.addWidget(contact)
+v_box.addWidget(about)
+
+h_box.addWidget(exit_btn)
+h_box.addWidget(login)
+
+v_box.addLayout(h_box)
+
+window.setLayout(v_box)
+
+exit_btn.clicked.connect(app.quit)
+
+window.show()
+sys.exit(app.exec())

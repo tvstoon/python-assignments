@@ -23,7 +23,7 @@
 # app.exec()
 
 
-from PySide6.QtWidgets import QWidget, QLabel, QLineEdit, QApplication, QHBoxLayoutc v
+from PySide6.QtWidgets import QWidget, QLabel, QLineEdit, QApplication, QHBoxLayout , QVBoxLayout
 
 app = QApplication()
 Widget = QWidget()

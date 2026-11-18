@@ -1,1738 +1,2223 @@
-import sys
-import os
-import math
-import random
-import time
-import wave
-import struct
-import tempfile
-import atexit
-from typing import List, Tuple, Dict, Optional
+import pygame, sys, os, math, random, time, sqlite3, array
+from pathlib import Path
 
-from PySide6.QtCore import (
-    Qt, QTimer, QRectF, QPointF, QLineF, QUrl, QSettings, Signal
-)
-from PySide6.QtGui import (
-    QFont, QPen, QBrush, QLinearGradient, QRadialGradient, QImage,
-    QPainterPath, QPolygonF, QPainter, QColor, QKeySequence, QShortcut,
-    QFontDatabase, QPixmap
-)
-from PySide6.QtWidgets import (
-    QApplication, QMainWindow, QWidget, QStackedWidget, QVBoxLayout,
-    QHBoxLayout, QLabel, QPushButton, QSlider, QCheckBox, QFrame
-)
-
+# ---------------------------------------------------------------------------
+# INIT
+# ---------------------------------------------------------------------------
+pygame.mixer.pre_init(22050, -16, 1, 512)
+pygame.init()
 try:
-    from PySide6.QtMultimedia import QSoundEffect
-    AUDIO_AVAILABLE = True
+    pygame.mixer.init()
+    AUDIO_OK = True
 except Exception:
-    QSoundEffect = None
-    AUDIO_AVAILABLE = False
+    AUDIO_OK = False
+
+WIDTH, HEIGHT = 1280, 720
+FPS = 60
+
+NAVY = (12, 20, 48)
+ROYAL_BLUE = (30, 60, 140)
+GOLD = (230, 180, 60)
+PURPLE = (110, 60, 160)
+EMERALD = (40, 140, 80)
+RED = (200, 60, 60)
+WHITE = (245, 245, 255)
+GRAY = (90, 100, 120)
+DARK = (20, 25, 40)
+GREEN = (70, 200, 100)
+LBLUE = (120, 180, 230)
+BLACK = (0, 0, 0)
+CREAM = (240, 230, 200)
+
+RARITY_COLORS = {
+    'Common': (150, 160, 180),
+    'Rare': (80, 160, 230),
+    'Epic': (170, 100, 230),
+    'Legendary': (240, 180, 60),
+}
 
 # ---------------------------------------------------------------------------
-# Constants
+# CARD DEFINITIONS
 # ---------------------------------------------------------------------------
+CARD_DEFS = {
+    'squire':      {'name': 'Squire',        'rarity': 'Common',    'cost': 2, 'type': 'melee',    'hp': 100, 'dmg': 12, 'range': 45,  'aspd': 1.0, 'spd': 70, 'targets': 'ground', 'color': (150,170,200), 'desc': 'Cheap melee fighter.'},
+    'knight':      {'name': 'Knight',        'rarity': 'Common',    'cost': 3, 'type': 'melee',    'hp': 160, 'dmg': 20, 'range': 45,  'aspd': 1.2, 'spd': 60, 'targets': 'ground', 'color': (100,140,200), 'desc': 'Sturdy melee warrior.'},
+    'archer':      {'name': 'Archer',        'rarity': 'Common',    'cost': 3, 'type': 'ranged',   'hp': 90,  'dmg': 15, 'range': 220, 'aspd': 1.1, 'spd': 55, 'targets': 'both',   'color': (80,180,110),  'desc': 'Ranged attacker.'},
+    'wisp':        {'name': 'Sky Wisp',      'rarity': 'Common',    'cost': 2, 'type': 'flying',   'hp': 70,  'dmg': 10, 'range': 45,  'aspd': 0.9, 'spd': 90, 'targets': 'both',   'flying': True, 'color': (180,220,255), 'desc': 'Fast flying harasser.'},
+    'heal_spell':  {'name': 'Healing Light', 'rarity': 'Common',    'cost': 3, 'type': 'spell_heal','heal': 100, 'aoe': 100, 'color': (240,240,150), 'desc': 'Heals allied units in radius.'},
+    'apprentice':  {'name': 'Apprentice',    'rarity': 'Rare',      'cost': 4, 'type': 'mage',     'hp': 80,  'dmg': 25, 'range': 200, 'aspd': 1.5, 'spd': 50, 'targets': 'both',   'aoe': 40, 'color': (160,120,220), 'desc': 'Ranged AoE caster.'},
+    'shield_guard':{'name': 'Shield Guardian','rarity': 'Rare',     'cost': 4, 'type': 'tank',     'hp': 320, 'dmg': 10, 'range': 45,  'aspd': 1.5, 'spd': 40, 'targets': 'ground', 'color': (140,140,160), 'desc': 'Massive damage sponge.'},
+    'healer':      {'name': 'Priestess',     'rarity': 'Rare',      'cost': 4, 'type': 'healer',   'hp': 100, 'dmg': 0,  'range': 180, 'aspd': 2.0, 'spd': 50, 'targets': 'heal',   'heal': 30, 'color': (240,220,120), 'desc': 'Heals nearby allies.'},
+    'fireball':    {'name': 'Fireball',      'rarity': 'Rare',      'cost': 4, 'type': 'spell',    'dmg': 120, 'aoe': 80, 'color': (240,120,60), 'desc': 'Deals area damage.'},
+    'war_banner':  {'name': 'War Banner',    'rarity': 'Rare',      'cost': 3, 'type': 'structure', 'hp': 250, 'dmg': 15, 'range': 180, 'aspd': 1.5, 'spd': 0, 'targets': 'both', 'color': (200,150,60), 'desc': 'Defensive tower spawn.'},
+    'assassin':    {'name': 'Shadow Assassin','rarity': 'Epic',     'cost': 5, 'type': 'melee',    'hp': 140, 'dmg': 55, 'range': 45,  'aspd': 0.9, 'spd': 100,'targets': 'ground', 'color': (80,60,120), 'desc': 'High damage striker.'},
+    'lightning':   {'name': 'Chain Lightning','rarity': 'Epic',     'cost': 5, 'type': 'spell',    'dmg': 90, 'aoe': 100, 'color': (150,200,255), 'desc': 'Large area damage.'},
+    'champion':    {'name': 'Knight Champion','rarity': 'Epic',     'cost': 6, 'type': 'melee',    'hp': 450, 'dmg': 40, 'range': 50,  'aspd': 1.3, 'spd': 55, 'targets': 'ground', 'color': (100,160,230), 'desc': 'Elite tank-fighter.'},
+    'phoenix':     {'name': 'Phoenix',       'rarity': 'Legendary', 'cost': 6, 'type': 'flying',   'hp': 200, 'dmg': 35, 'range': 180, 'aspd': 1.2, 'spd': 80, 'targets': 'both',   'flying': True, 'color': (255,140,50), 'desc': 'Flying firebird.'},
+    'dragon':      {'name': 'Ruby Dragon',   'rarity': 'Legendary', 'cost': 7, 'type': 'flying',   'hp': 380, 'dmg': 45, 'range': 220, 'aspd': 1.6, 'spd': 70, 'targets': 'both',   'flying': True, 'aoe': 50, 'color': (220,80,60), 'desc': 'Powerful flying dragon.'},
+}
 
-FRUITS = [
-    "🍎", "🍐", "🍊", "🍋", "🍌", "🍉", "🍇", "🍓", "🫐",
-    "🍈", "🍒", "🍑", "🍍", "🥥", "🥝", "🍅", "🥭", "🍏"
+DEFAULT_DECK = ['squire', 'knight', 'archer', 'wisp', 'fireball', 'heal_spell', 'war_banner', 'apprentice']
+ALL_CARDS = list(CARD_DEFS.keys())
+
+# ---------------------------------------------------------------------------
+# CAMPAIGN
+# ---------------------------------------------------------------------------
+REGIONS = [
+    {
+        'id': 1, 'name': 'Emerald Forest', 'color': (40,140,80),
+        'families': [1,2,5,10],
+        'battles': [
+            {'name': 'Forest Edge',       'diff': 1},
+            {'name': 'Whispering Glade',  'diff': 1},
+            {'name': 'Ancient Grove',     'diff': 2},
+            {'name': 'Elder Treant (Boss)','diff': 2, 'boss': True},
+        ]
+    },
+    {
+        'id': 2, 'name': 'Golden Desert', 'color': (200,160,60),
+        'families': [1,2,5,10,3,4],
+        'battles': [
+            {'name': 'Dune Outpost',      'diff': 2},
+            {'name': 'Sunken Oasis',      'diff': 2},
+            {'name': 'Scorpion Den',      'diff': 3},
+            {'name': 'Sun Pharaoh (Boss)','diff': 3, 'boss': True},
+        ]
+    },
+    {
+        'id': 3, 'name': 'Frozen Highlands', 'color': (120,180,230),
+        'families': [1,2,5,10,3,4,6,7],
+        'battles': [
+            {'name': 'Frost Ridge',       'diff': 3},
+            {'name': 'Ice Cavern',        'diff': 3},
+            {'name': 'Glacier Pass',      'diff': 3},
+            {'name': 'Frost Titan (Boss)','diff': 4, 'boss': True},
+        ]
+    },
+    {
+        'id': 4, 'name': 'Inferno Realm', 'color': (220,80,60),
+        'families': [1,2,5,10,3,4,6,7,8,9],
+        'battles': [
+            {'name': 'Cinder Wastes',     'diff': 3},
+            {'name': 'Molten Chasm',      'diff': 4},
+            {'name': 'Ember Throne',      'diff': 4},
+            {'name': 'Inferno Wyrm (Boss)','diff': 4, 'boss': True},
+        ]
+    },
+    {
+        'id': 5, 'name': 'Crown Kingdom', 'color': (230,180,60),
+        'families': [1,2,3,4,5,6,7,8,9,10],
+        'battles': [
+            {'name': 'Royal Gate',        'diff': 4},
+            {'name': 'Hall of Kings',     'diff': 4},
+            {'name': 'Shattered Crown',   'diff': 4},
+            {'name': 'Shadow King (Boss)','diff': 4, 'boss': True},
+        ]
+    },
 ]
 
-GRAVITY = 250.0
-SESSION_SECONDS = 60.0
-QUESTION_SECONDS = 5.0
-STARTING_LIVES = 3
-RUSH_DURATION = 8.0
-RUSH_ENERGY_MAX = 100.0
-SLICE_RADIUS = 44.0
-BOMB_CHANCE = 0.22
-MAX_PARTICLES = 260
-TRAIL_MAX = 16
-TRAIL_LIFETIME = 0.22
-MIN_SLICE_SEGMENT = 4.0
-PHYSICS_DT_CLAMP = 0.1
-MIN_W = 480.0
-MIN_H = 360.0
-
-TEMP_FILES: List[str] = []
-TEMP_DIRS: List[str] = []
-
-def cleanup_temp_files() -> None:
-    for path in list(TEMP_FILES):
-        try:
-            if os.path.exists(path):
-                os.remove(path)
-        except OSError:
-            pass
-    TEMP_FILES.clear()
-    for d in list(TEMP_DIRS):
-        try:
-            if os.path.isdir(d):
-                os.rmdir(d)
-        except OSError:
-            pass
-    TEMP_DIRS.clear()
-
-atexit.register(cleanup_temp_files)
-
 # ---------------------------------------------------------------------------
-# Procedural WAV generation
+# UTIL
 # ---------------------------------------------------------------------------
-
-def generate_wav(filename: str, freq: float, duration: float, kind: str = "sine") -> bool:
-    sample_rate = 22050
-    n = int(sample_rate * duration)
-    if n <= 0:
-        return False
-    data = bytearray()
-    inv_dur = 1.0 / duration if duration > 0.0 else 0.0
-    for i in range(n):
-        t = i / sample_rate
-        val = 0.0
-        if kind == "sine":
-            val = math.sin(2.0 * math.pi * freq * t)
-        elif kind == "slice":
-            noise = random.uniform(-1.0, 1.0)
-            env = math.exp(-t * 34.0)
-            val = noise * env
-        elif kind == "bomb":
-            noise = random.uniform(-1.0, 1.0)
-            f = max(20.0, freq * max(0.15, 1.0 - t * inv_dur))
-            sine = math.sin(2.0 * math.pi * f * t)
-            env = math.exp(-t * 6.0)
-            val = (0.7 * noise + 0.3 * sine) * env
-        elif kind == "correct":
-            env = math.exp(-t * 8.0)
-            val = math.sin(2.0 * math.pi * freq * t) * env
-        elif kind == "wrong":
-            f = freq * (1.0 - 0.5 * (t * inv_dur))
-            env = math.exp(-t * 5.0)
-            val = (1.0 if math.sin(2.0 * math.pi * f * t) > 0 else -1.0) * env * 0.5
-        elif kind == "combo":
-            f = freq * (1.0 + 1.5 * (t * inv_dur))
-            env = math.exp(-t * 4.0)
-            val = math.sin(2.0 * math.pi * f * t) * env
-        else:
-            val = math.sin(2.0 * math.pi * freq * t)
-        s = int(max(-32768, min(32767, val * 28000)))
-        data.extend(struct.pack('<h', s))
+def get_data_dir():
+    if sys.platform == 'win32':
+        base = os.environ.get('APPDATA', os.path.expanduser('~'))
+    else:
+        base = os.path.expanduser('~/.local/share')
+    d = Path(base) / 'MultiplyRoyale'
     try:
-        with wave.open(filename, 'w') as wf:
-            wf.setnchannels(1)
-            wf.setsampwidth(2)
-            wf.setframerate(sample_rate)
-            wf.writeframes(bytes(data))
-    except (OSError, wave.Error):
+        d.mkdir(parents=True, exist_ok=True)
+    except Exception:
+        d = Path('.')
+    return d
+
+_FONT_CACHE = {}
+def get_font(size, bold=False):
+    key = (size, bold)
+    if key not in _FONT_CACHE:
+        try:
+            _FONT_CACHE[key] = pygame.font.SysFont('segoeui,arial,sans', size, bold=bold)
+        except Exception:
+            _FONT_CACHE[key] = pygame.font.Font(None, size)
+    return _FONT_CACHE[key]
+
+def draw_text(surf, text, pos, size=20, color=WHITE, bold=False, center=False):
+    f = get_font(size, bold)
+    img = f.render(str(text), True, color)
+    r = img.get_rect(center=pos) if center else img.get_rect(topleft=pos)
+    surf.blit(img, r)
+    return r
+
+def make_sound(freq, dur, vol=0.15):
+    if not AUDIO_OK: return None
+    try:
+        sr = 22050
+        n = int(sr * dur)
+        buf = array.array('h')
+        for i in range(n):
+            s = int(32767 * vol * math.sin(2*math.pi*freq*i/sr) *
+                    max(0, 1 - i/n))
+            buf.append(s)
+        return pygame.mixer.Sound(buffer=buf)
+    except Exception:
+        return None
+
+SFX = {}
+def init_sfx():
+    SFX['click']    = make_sound(600, 0.06, 0.2)
+    SFX['correct']  = make_sound(880, 0.15, 0.25)
+    SFX['wrong']    = make_sound(180, 0.25, 0.25)
+    SFX['deploy']   = make_sound(440, 0.12, 0.2)
+    SFX['hit']      = make_sound(260, 0.05, 0.1)
+    SFX['victory']  = make_sound(660, 0.4, 0.3)
+    SFX['defeat']   = make_sound(140, 0.5, 0.3)
+
+def play_sfx(name):
+    s = SFX.get(name)
+    if s and AUDIO_OK:
+        try:
+            s.play()
+        except Exception:
+            pass
+
+# ---------------------------------------------------------------------------
+# DATABASE
+# ---------------------------------------------------------------------------
+class SaveDB:
+    def __init__(self, path):
+        self.path = str(path)
+        self.conn = sqlite3.connect(self.path)
+        self.conn.row_factory = sqlite3.Row
+        self._init()
+
+    def _init(self):
+        c = self.conn.cursor()
+        c.executescript('''
+            CREATE TABLE IF NOT EXISTS player (id INTEGER PRIMARY KEY, level INT DEFAULT 1, xp INT DEFAULT 0, gold INT DEFAULT 150, region INT DEFAULT 1, battles_won INT DEFAULT 0);
+            CREATE TABLE IF NOT EXISTS cards (card_id TEXT PRIMARY KEY, level INT DEFAULT 1, dupes INT DEFAULT 0, unlocked INT DEFAULT 1);
+            CREATE TABLE IF NOT EXISTS deck (slot INTEGER PRIMARY KEY, card_id TEXT);
+            CREATE TABLE IF NOT EXISTS facts (a INT, b INT, attempts INT DEFAULT 0, correct INT DEFAULT 0, incorrect INT DEFAULT 0, total_time REAL DEFAULT 0, last_ts REAL DEFAULT 0, mastery INT DEFAULT 0, streak INT DEFAULT 0, PRIMARY KEY(a,b));
+            CREATE TABLE IF NOT EXISTS campaign (region INT, battle INT, won INT DEFAULT 0, PRIMARY KEY(region, battle));
+            CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT);
+        ''')
+        self.conn.commit()
+        c.execute("INSERT OR IGNORE INTO player (id) VALUES (1)")
+        self.conn.commit()
+        for cid in CARD_DEFS:
+            c.execute("INSERT OR IGNORE INTO cards (card_id) VALUES (?)", (cid,))
+        self.conn.commit()
+        c.execute("SELECT COUNT(*) FROM deck")
+        if c.fetchone()[0] == 0:
+            for i, cid in enumerate(DEFAULT_DECK):
+                c.execute("INSERT INTO deck (slot, card_id) VALUES (?,?)", (i, cid))
+        self.conn.commit()
+        for a in range(1, 13):
+            for b in range(1, 13):
+                c.execute("INSERT OR IGNORE INTO facts (a,b) VALUES (?,?)", (a,b))
+        self.conn.commit()
+
+    def get_player(self):
+        c = self.conn.cursor()
+        c.execute("SELECT * FROM player WHERE id=1")
+        return dict(c.fetchone())
+
+    def update_player(self, **kw):
+        if not kw: return
+        sets = ', '.join(f"{k}=?" for k in kw)
+        vals = list(kw.values()) + [1]
+        self.conn.execute(f"UPDATE player SET {sets} WHERE id=?", vals)
+        self.conn.commit()
+
+    def get_card(self, cid):
+        c = self.conn.cursor()
+        c.execute("SELECT * FROM cards WHERE card_id=?", (cid,))
+        row = c.fetchone()
+        return dict(row) if row else {'card_id': cid, 'level': 1, 'dupes': 0, 'unlocked': 1}
+
+    def all_cards(self):
+        c = self.conn.cursor()
+        c.execute("SELECT * FROM cards")
+        return {r['card_id']: dict(r) for r in c.fetchall()}
+
+    def update_card(self, cid, **kw):
+        if not kw: return
+        sets = ', '.join(f"{k}=?" for k in kw)
+        vals = list(kw.values()) + [cid]
+        self.conn.execute(f"UPDATE cards SET {sets} WHERE card_id=?", vals)
+        self.conn.commit()
+
+    def get_deck(self):
+        c = self.conn.cursor()
+        c.execute("SELECT slot, card_id FROM deck ORDER BY slot")
+        deck = [r['card_id'] for r in c.fetchall()]
+        while len(deck) < 8:
+            deck.append(DEFAULT_DECK[len(deck)])
+        return deck[:8]
+
+    def set_deck(self, deck):
+        c = self.conn.cursor()
+        c.execute("DELETE FROM deck")
+        for i, cid in enumerate(deck[:8]):
+            c.execute("INSERT INTO deck (slot, card_id) VALUES (?,?)", (i, cid))
+        self.conn.commit()
+
+    def get_fact(self, a, b):
+        c = self.conn.cursor()
+        c.execute("SELECT * FROM facts WHERE a=? AND b=?", (a,b))
+        row = c.fetchone()
+        return dict(row) if row else {'a':a,'b':b,'attempts':0,'correct':0,'incorrect':0,'total_time':0,'last_ts':0,'mastery':0,'streak':0}
+
+    def update_fact(self, a, b, **kw):
+        if not kw: return
+        sets = ', '.join(f"{k}=?" for k in kw)
+        vals = list(kw.values()) + [a, b]
+        self.conn.execute(f"UPDATE facts SET {sets} WHERE a=? AND b=?", vals)
+        self.conn.commit()
+
+    def all_facts(self):
+        c = self.conn.cursor()
+        c.execute("SELECT * FROM facts")
+        return [dict(r) for r in c.fetchall()]
+
+    def get_setting(self, key, default=None):
+        c = self.conn.cursor()
+        c.execute("SELECT value FROM settings WHERE key=?", (key,))
+        row = c.fetchone()
+        if row is None: return default
+        try:
+            return json.loads(row['value'])
+        except Exception:
+            return row['value']
+
+    def set_setting(self, key, value):
+        self.conn.execute("INSERT OR REPLACE INTO settings (key, value) VALUES (?,?)",
+                          (key, json.dumps(value)))
+        self.conn.commit()
+
+    def is_won(self, region, battle):
+        c = self.conn.cursor()
+        c.execute("SELECT won FROM campaign WHERE region=? AND battle=?", (region, battle))
+        r = c.fetchone()
+        return bool(r and r['won'])
+
+    def set_won(self, region, battle, won=1):
+        self.conn.execute("INSERT OR REPLACE INTO campaign (region, battle, won) VALUES (?,?,?)",
+                          (region, battle, won))
+        self.conn.commit()
+
+    def is_region_unlocked(self, rid):
+        if rid == 1: return True
+        for b_idx, b in enumerate(REGIONS[rid-2]['battles']):
+            if b.get('boss') and self.is_won(rid-1, b_idx):
+                return True
         return False
-    return True
+
+    def region_progress(self, rid):
+        battles = REGIONS[rid-1]['battles']
+        done = sum(1 for i in range(len(battles)) if self.is_won(rid, i))
+        return done, len(battles)
+
+    def reset(self):
+        self.conn.execute("DELETE FROM player")
+        self.conn.execute("DELETE FROM cards")
+        self.conn.execute("DELETE FROM deck")
+        self.conn.execute("DELETE FROM facts")
+        self.conn.execute("DELETE FROM campaign")
+        self.conn.execute("DELETE FROM settings")
+        self.conn.commit()
+        self._init()
 
 # ---------------------------------------------------------------------------
-# Audio Manager
+# MULTIPLICATION ENGINE
 # ---------------------------------------------------------------------------
+class MultEngine:
+    def __init__(self, db):
+        self.db = db
 
-class AudioManager:
-    def __init__(self) -> None:
-        self.muted = False
-        self.volume = 0.8
-        self.effects: Dict[str, "QSoundEffect"] = {}
-        self.temp_dir: Optional[str] = None
-        self.enabled = AUDIO_AVAILABLE
-        if self.enabled:
-            try:
-                self.temp_dir = tempfile.mkdtemp(prefix="fruitslash_")
-                TEMP_DIRS.append(self.temp_dir)
-                self._build_sounds()
-            except Exception:
-                self.enabled = False
-                self.effects = {}
-
-    def _build_sounds(self) -> None:
-        if not self.temp_dir:
-            return
-        specs = {
-            "slice": (440.0, 0.08, "slice"),
-            "wrong": (150.0, 0.30, "wrong"),
-            "bomb": (80.0, 0.50, "bomb"),
-            "combo": (587.33, 0.40, "combo"),
-            "result": (523.25, 0.55, "correct"),
-            "button": (640.0, 0.05, "sine"),
-        }
-        for name, (f, d, k) in specs.items():
-            path = os.path.join(self.temp_dir, f"{name}.wav")
-            if not generate_wav(path, f, d, k):
-                continue
-            try:
-                if os.path.getsize(path) <= 44:
-                    continue
-            except OSError:
-                continue
-            TEMP_FILES.append(path)
-            self._add_effect(name, path)
-        for i in range(12):
-            f = 440.0 * (1.08 ** i)
-            path = os.path.join(self.temp_dir, f"correct_{i}.wav")
-            if not generate_wav(path, f, 0.22, "correct"):
-                continue
-            try:
-                if os.path.getsize(path) <= 44:
-                    continue
-            except OSError:
-                continue
-            TEMP_FILES.append(path)
-            self._add_effect(f"correct_{i}", path)
-
-    def _add_effect(self, name: str, path: str) -> None:
-        try:
-            e = QSoundEffect()
-            e.setSource(QUrl.fromLocalFile(path))
-            e.setVolume(0.0 if self.muted else self.volume)
-            self.effects[name] = e
-        except Exception:
-            pass
-
-    def set_muted(self, muted: bool) -> None:
-        self.muted = bool(muted)
-        self._update_volumes()
-
-    def set_volume(self, volume: float) -> None:
-        try:
-            v = float(volume)
-        except (TypeError, ValueError):
-            return
-        self.volume = max(0.0, min(1.0, v))
-        self._update_volumes()
-
-    def _update_volumes(self) -> None:
-        v = 0.0 if self.muted else self.volume
-        for e in self.effects.values():
-            try:
-                e.setVolume(v)
-            except Exception:
-                pass
-
-    def play(self, name: str) -> None:
-        if self.muted or self.volume <= 0.0:
-            return
-        e = self.effects.get(name)
-        if e is None:
-            return
-        try:
-            e.stop()
-            e.play()
-        except Exception:
-            pass
-
-    def play_correct(self, combo_step: int) -> None:
-        step = max(0, min(11, int(combo_step)))
-        self.play(f"correct_{step}")
-
-    def shutdown(self) -> None:
-        for e in list(self.effects.values()):
-            try:
-                e.stop()
-            except Exception:
-                pass
-        self.effects.clear()
-        cleanup_temp_files()
-
-# ---------------------------------------------------------------------------
-# Emoji image cache
-# ---------------------------------------------------------------------------
-
-class ImageCache:
-    def __init__(self) -> None:
-        self._cache: Dict[Tuple[str, int], QImage] = {}
-        self._font_family: Optional[str] = None
-
-    def _resolve_font(self) -> str:
-        if self._font_family is not None:
-            return self._font_family
-        candidates = [
-            "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji",
-            "Noto Emoji", "Twemoji", "Symbola", "EmojiOne Color",
-        ]
-        fam = ""
-        try:
-            families = set(QFontDatabase.families())
-            for c in candidates:
-                if c in families:
-                    fam = c
-                    break
-        except Exception:
-            fam = ""
-        self._font_family = fam
-        return fam
-
-    def get_emoji(self, emoji: str, size: int) -> QImage:
-        key = (emoji, size)
-        img = self._cache.get(key)
-        if img is not None:
-            return img
-        img = QImage(size, size, QImage.Format.Format_ARGB32_Premultiplied)
-        img.fill(Qt.GlobalColor.transparent)
-        p = QPainter(img)
-        try:
-            p.setRenderHint(QPainter.RenderHint.Antialiasing, True)
-            p.setRenderHint(QPainter.RenderHint.TextAntialiasing, True)
-            p.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform, True)
-            fam = self._resolve_font()
-            f = QFont(fam) if fam else QFont()
-            f.setPixelSize(max(8, int(size * 0.82)))
-            p.setFont(f)
-            p.drawText(QRectF(0, 0, size, size),
-                       Qt.AlignmentFlag.AlignCenter, emoji)
-        finally:
-            p.end()
-        if len(self._cache) > 240:
-            self._cache.clear()
-        self._cache[key] = img
-        return img
-
-IMAGE_CACHE = ImageCache()
-
-# ---------------------------------------------------------------------------
-# Adaptive multiplication learner
-# ---------------------------------------------------------------------------
-
-class AdaptiveLearner:
-    def __init__(self) -> None:
-        self.weights: Dict[Tuple[int, int], float] = {}
-        for i in range(1, 13):
-            for j in range(1, 13):
-                self.weights[(i, j)] = 1.0
-        self.last: Optional[Tuple[int, int]] = None
-
-    def next_question(self) -> Tuple[int, int, int]:
-        pairs = list(self.weights.keys())
-        if not pairs:
-            a = random.randint(1, 12)
-            b = random.randint(1, 12)
-            return a, b, a * b
-        weights = [max(0.01, self.weights[p]) for p in pairs]
-        if self.last is not None and self.last in self.weights:
-            weights[pairs.index(self.last)] *= 0.12
-        total = sum(weights)
-        if total <= 0.0:
-            chosen = random.choice(pairs)
+    def _weight(self, fact):
+        attempts = fact['attempts']
+        incorrect = fact['incorrect']
+        correct = fact['correct']
+        mastery = fact['mastery']
+        last_ts = fact['last_ts'] or 0
+        age = time.time() - last_ts if last_ts > 0 else 1e9
+        w = 1.0
+        if attempts == 0:
+            w += 8.0
         else:
-            r = random.uniform(0.0, total)
-            cum = 0.0
-            chosen = pairs[-1]
-            for p, w in zip(pairs, weights):
-                cum += w
-                if r <= cum:
-                    chosen = p
-                    break
-        self.last = chosen
-        return chosen[0], chosen[1], chosen[0] * chosen[1]
+            acc = correct / max(1, attempts)
+            w += (1 - acc) * 6.0
+            w += (5 - mastery) * 1.5
+        w += incorrect * 1.5
+        if attempts >= 3 and mastery >= 4:
+            w *= 0.3
+        w += min(3.0, age / 86400.0)
+        w += random.random() * 2.0
+        return max(0.05, w)
 
-    def record(self, a: int, b: int, correct: bool) -> None:
-        for pair in ((a, b), (b, a)):
-            if pair not in self.weights:
-                continue
-            if correct:
-                self.weights[pair] = max(0.15, self.weights[pair] * 0.85)
-            else:
-                self.weights[pair] = min(12.0, self.weights[pair] * 1.55 + 0.4)
+    def select_question(self, allowed_families):
+        facts = self.db.all_facts()
+        pool = []
+        for f in facts:
+            a, b = f['a'], f['b']
+            if a in allowed_families or b in allowed_families:
+                if a > 12 or b > 12: continue
+                pool.append(f)
+        if not pool:
+            a = random.choice(allowed_families)
+            b = random.randint(1, 10)
+            return a, b
+        weighted = [(f, self._weight(f)) for f in pool]
+        total = sum(w for _, w in weighted)
+        r = random.random() * total
+        acc = 0
+        for f, w in weighted:
+            acc += w
+            if acc >= r:
+                return f['a'], f['b']
+        return pool[0]['a'], pool[0]['b']
+
+    def make_options(self, a, b, n=4):
+        ans = a * b
+        opts = {ans}
+        tries = 0
+        while len(opts) < n and tries < 60:
+            tries += 1
+            variant = random.choice([
+                ans + random.choice([-a, a, -b, b, -1, 1, -2, 2, -10, 10]),
+                a * random.choice([max(1, b-1), b+1, b+2]),
+                random.choice([a,b]) * random.randint(1,10),
+            ])
+            if 0 <= variant <= 144 and variant != ans:
+                opts.add(variant)
+        opts = list(opts)
+        random.shuffle(opts)
+        return opts
+
+    def record(self, a, b, correct, response_time, assisted=False):
+        f = self.db.get_fact(a, b)
+        attempts = f['attempts'] + 1
+        ncorrect = f['correct'] + (1 if correct else 0)
+        nincorrect = f['incorrect'] + (0 if correct else 1)
+        total_time = f['total_time'] + response_time
+        streak = (f['streak'] + 1) if correct else 0
+        mastery = f['mastery']
+        if correct and response_time < 6 and not assisted:
+            if streak >= 2:
+                mastery = min(5, mastery + 1)
+        elif not correct:
+            mastery = max(0, mastery - 1)
+        self.db.update_fact(
+            a, b,
+            attempts=attempts, correct=ncorrect, incorrect=nincorrect,
+            total_time=total_time, last_ts=time.time(),
+            mastery=mastery, streak=streak
+        )
+
+    def overall_stats(self):
+        facts = self.db.all_facts()
+        total = sum(f['attempts'] for f in facts)
+        correct = sum(f['correct'] for f in facts)
+        mastered = sum(1 for f in facts if f['mastery'] >= 4)
+        return {
+            'total': total, 'correct': correct,
+            'accuracy': (correct / total * 100) if total else 0,
+            'mastered': mastered
+        }
 
 # ---------------------------------------------------------------------------
-# Particle
+# ENTITIES
 # ---------------------------------------------------------------------------
-
-class Particle:
-    __slots__ = ("x", "y", "vx", "vy", "life", "decay", "size", "color", "gravity")
-
-    def __init__(self, x: float, y: float, color: QColor, spark: bool = False) -> None:
-        angle = random.uniform(0.0, 2.0 * math.pi)
-        speed = random.uniform(120.0, 420.0) if spark else random.uniform(60.0, 220.0)
-        self.x = x
-        self.y = y
-        self.vx = math.cos(angle) * speed
-        self.vy = math.sin(angle) * speed
-        self.life = 1.0
-        self.decay = random.uniform(2.0, 4.0)
-        self.size = random.uniform(3.0, 6.0) if spark else random.uniform(4.0, 9.0)
-        self.color = QColor(color)
-        self.gravity = 320.0
-
-    def update(self, dt: float) -> bool:
-        self.x += self.vx * dt
-        self.y += self.vy * dt
-        self.vy += self.gravity * dt
-        self.life -= self.decay * dt
-        return self.life > 0.0
-
-    def draw(self, painter: QPainter) -> None:
-        if self.life <= 0.0:
-            return
-        c = QColor(self.color)
-        c.setAlphaF(max(0.0, min(1.0, self.life)))
-        painter.setPen(Qt.PenStyle.NoPen)
-        painter.setBrush(QBrush(c))
-        s = max(0.5, self.size * self.life)
-        painter.drawEllipse(QPointF(self.x, self.y), s, s)
-
-# ---------------------------------------------------------------------------
-# Fruit
-# ---------------------------------------------------------------------------
-
-class Fruit:
-    def __init__(self, x: float, y: float, vx: float, vy: float,
-                 emoji: str, answer: int, correct: bool,
-                 qid: int, bounds: Tuple[float, float],
-                 bomb: bool = False) -> None:
+class Unit:
+    def __init__(self, team, lane, x, y, cid, level=1):
+        c = CARD_DEFS[cid]
+        self.team = team
+        self.lane = lane
         self.x = float(x)
         self.y = float(y)
-        self.vx = float(vx)
-        self.vy = float(vy)
-        self.emoji = emoji
-        self.answer = int(answer)
-        self.correct = bool(correct)
-        self.bomb = bool(bomb)
-        self.qid = qid
-        self.bounds_w, self.bounds_h = bounds
-        self.radius = SLICE_RADIUS
-        self.rotation = random.uniform(0.0, 360.0)
-        self.v_rot = random.uniform(-150.0, 150.0)
-        self.sliced = False
-        self.slice_angle = 0.0
-        self.slice_progress = 0.0
-        self.slice_duration = 0.42
-        self.active = True
-        self.missed = False
+        self.cid = cid
+        self.name = c['name']
+        self.color = c['color']
+        self.flying = c.get('flying', False)
+        self.type = c['type']
+        lvl_m = 1.0 + (level - 1) * 0.1
+        self.max_hp = c.get('hp', 100) * lvl_m
+        self.hp = self.max_hp
+        self.dmg = c.get('dmg', 0) * lvl_m
+        self.range = c.get('range', 40)
+        self.aspd = c.get('aspd', 1.0)
+        self.spd = c.get('spd', 60)
+        self.targets = c.get('targets', 'ground')
+        self.aoe = c.get('aoe', 0)
+        self.heal = c.get('heal', 0) * lvl_m
+        self.attack_cd = 0.0
+        self.alive = True
+        self.radius = 16 if self.flying else 14
+        self.hit_flash = 0.0
 
-    def update(self, dt: float, gravity: float = GRAVITY) -> bool:
-        if not self.active:
-            return False
-        if self.sliced:
-            self.slice_progress += dt / self.slice_duration
-            if self.slice_progress >= 1.0:
-                self.slice_progress = 1.0
-                self.active = False
-                return False
-            return True
-        self.x += self.vx * dt
-        self.y += self.vy * dt
-        self.vy += gravity * dt
-        self.rotation += self.v_rot * dt
-        if (self.y > self.bounds_h + 220.0 or
-                self.x < -260.0 or self.x > self.bounds_w + 260.0):
-            self.active = False
-            return False
+    def valid_target(self, t):
+        if not getattr(t, 'alive', True): return False
+        if t is self: return False
+        if getattr(t, 'flying', False) and self.targets == 'ground': return False
+        if not getattr(t, 'flying', False) and self.targets == 'air': return False
         return True
 
-    def check_slice(self, line: QLineF) -> bool:
-        if self.sliced or not self.active:
-            return False
-        p1 = line.p1()
-        p2 = line.p2()
-        dx = p2.x() - p1.x()
-        dy = p2.y() - p1.y()
-        L2 = dx * dx + dy * dy
-        if L2 <= 0.0001:
-            d2 = (self.x - p1.x()) ** 2 + (self.y - p1.y()) ** 2
+    def find_target(self, battle):
+        if self.team == 'player':
+            enemies = list(battle.enemy_units)
+            structures = battle.enemy_towers + [battle.enemy_castle]
         else:
-            t = ((self.x - p1.x()) * dx + (self.y - p1.y()) * dy) / L2
-            t = max(0.0, min(1.0, t))
-            nx = p1.x() + t * dx
-            ny = p1.y() + t * dy
-            d2 = (self.x - nx) ** 2 + (self.y - ny) ** 2
-        if d2 <= self.radius * self.radius:
-            self.sliced = True
-            self.slice_angle = math.atan2(dy, dx)
+            enemies = list(battle.player_units)
+            structures = battle.player_towers + [battle.player_castle]
+        best = None
+        best_d = float('inf')
+        for e in enemies:
+            if not e.alive: continue
+            if not self.valid_target(e): continue
+            d = math.hypot(e.x - self.x, e.y - self.y)
+            if d < best_d:
+                best_d, best = d, e
+        if best: return best, best_d
+        for s in structures:
+            if not s.alive: continue
+            d = math.hypot(s.x - self.x, s.y - self.y)
+            if d < best_d:
+                best_d, best = d, s
+        return best, best_d
+
+    def update(self, dt, battle):
+        if not self.alive: return
+        self.attack_cd = max(0, self.attack_cd - dt)
+        self.hit_flash = max(0, self.hit_flash - dt)
+
+        if self.type == 'healer':
+            allies = battle.player_units if self.team == 'player' else battle.enemy_units
+            best = None
+            best_hp = 1e9
+            for a in allies:
+                if not a.alive or a is self: continue
+                if a.hp >= a.max_hp: continue
+                d = math.hypot(a.x - self.x, a.y - self.y)
+                if d <= self.range and a.hp < best_hp:
+                    best = a
+                    best_hp = a.hp
+            if best and self.attack_cd <= 0:
+                best.hp = min(best.max_hp, best.hp + self.heal)
+                self.attack_cd = self.aspd
+                battle.add_heal_effect(best.x, best.y)
+            elif not best:
+                self._advance(dt, battle)
+            return
+
+        target, dist = self.find_target(battle)
+        if target is None:
+            self._advance(dt, battle)
+            return
+
+        if dist <= self.range:
+            if self.attack_cd <= 0:
+                self._attack(target, battle)
+                self.attack_cd = self.aspd
+        else:
+            dx = target.x - self.x
+            dy = target.y - self.y
+            d = math.hypot(dx, dy)
+            if d > 0.1:
+                mv = self.spd * dt
+                self.x += dx / d * mv
+                self.y += dy / d * mv
+
+    def _advance(self, dt, battle):
+        if self.spd <= 0: return
+        direction = 1 if self.team == 'player' else -1
+        self.x += direction * self.spd * dt
+
+    def _attack(self, target, battle):
+        if self.range > 100:
+            battle.projectiles.append(
+                Projectile(self.x, self.y, target, self.dmg, self.team, self.color, self.aoe))
+        else:
+            self._deal_damage(target, battle, self.dmg, self.aoe, self.color)
+        battle.add_hit_effect(target.x, target.y, self.color)
+
+    def _deal_damage(self, target, battle, dmg, aoe, color):
+        if aoe > 0:
+            if self.team == 'player':
+                group = list(battle.enemy_units) + battle.enemy_towers + [battle.enemy_castle]
+            else:
+                group = list(battle.player_units) + battle.player_towers + [battle.player_castle]
+            for e in group:
+                if not getattr(e, 'alive', True): continue
+                if math.hypot(e.x - target.x, e.y - target.y) <= aoe:
+                    e.hp -= dmg
+                    if getattr(e, 'hit_flash', None) is not None:
+                        e.hit_flash = 0.15
+                    if e.hp <= 0:
+                        e.alive = False
+                    battle.add_damage_number(e.x, e.y, int(dmg))
+        else:
+            if target.alive:
+                target.hp -= dmg
+                if hasattr(target, 'hit_flash'):
+                    target.hit_flash = 0.15
+                if target.hp <= 0:
+                    target.alive = False
+                battle.add_damage_number(target.x, target.y, int(dmg))
+
+
+class Projectile:
+    def __init__(self, x, y, target, dmg, team, color, aoe=0, speed=420):
+        self.x = float(x); self.y = float(y)
+        self.target = target
+        self.dmg = dmg
+        self.team = team
+        self.color = color
+        self.aoe = aoe
+        self.speed = speed
+        self.alive = True
+
+    def update(self, dt, battle):
+        if not self.alive: return
+        if not getattr(self.target, 'alive', True):
+            self.alive = False
+            return
+        dx = self.target.x - self.x
+        dy = self.target.y - self.y
+        d = math.hypot(dx, dy)
+        mv = self.speed * dt
+        if d <= mv:
+            self._hit(battle)
+            self.alive = False
+        else:
+            self.x += dx / d * mv
+            self.y += dy / d * mv
+
+    def _hit(self, battle):
+        if self.aoe > 0:
+            if self.team == 'player':
+                group = list(battle.enemy_units) + battle.enemy_towers + [battle.enemy_castle]
+            else:
+                group = list(battle.player_units) + battle.player_towers + [battle.player_castle]
+            for e in group:
+                if not getattr(e, 'alive', True): continue
+                if math.hypot(e.x - self.target.x, e.y - self.target.y) <= self.aoe:
+                    e.hp -= self.dmg
+                    if hasattr(e, 'hit_flash'): e.hit_flash = 0.15
+                    if e.hp <= 0: e.alive = False
+                    battle.add_damage_number(e.x, e.y, int(self.dmg))
+        else:
+            if getattr(self.target, 'alive', True):
+                self.target.hp -= self.dmg
+                if hasattr(self.target, 'hit_flash'): self.target.hit_flash = 0.15
+                if self.target.hp <= 0: self.target.alive = False
+                battle.add_damage_number(self.target.x, self.target.y, int(self.dmg))
+
+
+class Tower:
+    def __init__(self, x, y, team, lane):
+        self.x = float(x); self.y = float(y)
+        self.team = team
+        self.lane = lane
+        self.max_hp = 800
+        self.hp = self.max_hp
+        self.dmg = 30
+        self.range = 220
+        self.aspd = 1.2
+        self.attack_cd = 0.0
+        self.alive = True
+        self.flying = False
+        self.hit_flash = 0.0
+
+    def update(self, dt, battle):
+        if not self.alive: return
+        self.attack_cd = max(0, self.attack_cd - dt)
+        self.hit_flash = max(0, self.hit_flash - dt)
+        enemies = battle.enemy_units if self.team == 'player' else battle.player_units
+        best = None; best_d = float('inf')
+        for e in enemies:
+            if not e.alive: continue
+            d = math.hypot(e.x - self.x, e.y - self.y)
+            if d <= self.range and d < best_d:
+                best_d, best = d, e
+        if best and self.attack_cd <= 0:
+            battle.projectiles.append(Projectile(self.x, self.y, best, self.dmg, self.team, GOLD))
+            self.attack_cd = self.aspd
+
+
+class Castle:
+    def __init__(self, x, y, team):
+        self.x = float(x); self.y = float(y)
+        self.team = team
+        self.max_hp = 2200
+        self.hp = self.max_hp
+        self.alive = True
+        self.flying = False
+        self.hit_flash = 0.0
+
+    def update(self, dt, battle):
+        if not self.alive: return
+        self.hit_flash = max(0, self.hit_flash - dt)
+
+
+class Particle:
+    def __init__(self, x, y, color, life=0.5, size=4, vel=None):
+        self.x = x; self.y = y
+        self.color = color
+        self.life = life
+        self.max_life = life
+        self.size = size
+        self.vx, self.vy = vel if vel else (random.uniform(-60,60), random.uniform(-60,60))
+        self.alive = True
+
+    def update(self, dt):
+        self.life -= dt
+        if self.life <= 0:
+            self.alive = False
+            return
+        self.x += self.vx * dt
+        self.y += self.vy * dt
+        self.vy += 120 * dt
+
+
+class DamageNumber:
+    def __init__(self, x, y, amount, color=WHITE):
+        self.x = x; self.y = y
+        self.amount = amount
+        self.life = 0.9
+        self.color = color
+        self.alive = True
+
+    def update(self, dt):
+        self.life -= dt
+        self.y -= 40 * dt
+        if self.life <= 0:
+            self.alive = False
+
+
+# ---------------------------------------------------------------------------
+# AI
+# ---------------------------------------------------------------------------
+AI_PARAMS = {
+    1: {'interval': 3.0, 'save_energy': 1.5, 'aggression': 0.4},
+    2: {'interval': 2.0, 'save_energy': 1.0, 'aggression': 0.6},
+    3: {'interval': 1.3, 'save_energy': 0.7, 'aggression': 0.8},
+    4: {'interval': 0.9, 'save_energy': 0.4, 'aggression': 1.0},
+}
+
+class AI:
+    def __init__(self, difficulty, deck):
+        self.difficulty = difficulty
+        self.params = AI_PARAMS[difficulty]
+        self.deck = deck[:]
+        random.shuffle(self.deck)
+        self.hand = self.deck[:4]
+        self.deck = self.deck[4:]
+        self.decision_timer = self.params['interval'] * 0.6
+
+    def update(self, dt, battle):
+        if battle.ended: return
+        self.decision_timer -= dt
+        if self.decision_timer > 0: return
+        self.decision_timer = self.params['interval'] * random.uniform(0.85, 1.15)
+
+        energy = battle.enemy_energy
+        affordable = [(i, cid) for i, cid in enumerate(self.hand)
+                      if CARD_DEFS[cid]['cost'] <= energy - self.params['save_energy']]
+        if not affordable:
+            affordable = [(i, cid) for i, cid in enumerate(self.hand)
+                          if CARD_DEFS[cid]['cost'] <= energy]
+        if not affordable:
+            return
+
+        # Score threats
+        threat_lanes = [0, 0]
+        for u in battle.player_units:
+            if u.alive and u.x > 500:
+                threat_lanes[u.lane] += 20
+        threat_total = sum(threat_lanes)
+
+        best_score = -1
+        best_choice = None
+        for idx, cid in affordable:
+            c = CARD_DEFS[cid]
+            score = 1.0
+            score += c['cost'] * 0.2
+            # Spell prioritization
+            if c['type'] in ('spell', 'spell_heal'):
+                if c['type'] == 'spell' and threat_total > 40:
+                    score += 4.0
+                elif c['type'] == 'spell_heal' and len([u for u in battle.enemy_units if u.hp < u.max_hp*0.5]) > 0:
+                    score += 3.0
+                else:
+                    score += 0.3
+            # Counter flying with archers / ranged
+            if any(u.flying for u in battle.player_units) and c.get('targets') in ('both',):
+                score += 2.0
+            # Defensive response
+            if threat_total > 50 and c.get('type') in ('melee', 'tank', 'ranged', 'mage'):
+                score += 3.0
+            # Pressure aggression
+            if threat_total < 20 and c.get('type') in ('melee', 'flying', 'ranged'):
+                score += self.params['aggression'] * 2.5
+            score += random.uniform(0, 1.5)
+            if score > best_score:
+                best_score = score
+                best_choice = (idx, cid)
+
+        if best_choice is None:
+            return
+        idx, cid = best_choice
+
+        # Choose lane
+        if threat_lanes[0] > threat_lanes[1]:
+            lane = 0
+        elif threat_lanes[1] > threat_lanes[0]:
+            lane = 1
+        else:
+            lane = random.choice([0, 1])
+
+        # Deploy
+        c = CARD_DEFS[cid]
+        cost = c['cost']
+        if battle.enemy_energy < cost:
+            return
+        battle.enemy_energy -= cost
+        y = 240 if lane == 0 else 460
+        if c['type'] in ('spell', 'spell_heal'):
+            # Target an area near player cluster
+            tx = 640
+            if battle.player_units:
+                pu = random.choice([u for u in battle.player_units if u.alive] or [None])
+                if pu is not None:
+                    tx = pu.x
+            battle.cast_spell('enemy', cid, tx, 350)
+        else:
+            if c['type'] == 'structure':
+                x = 780
+            else:
+                x = 700
+            battle.spawn_unit('enemy', cid, lane, x, y)
+        # rotate
+        if self.deck:
+            self.hand[idx] = self.deck.pop(0)
+            self.deck.append(cid)
+        else:
+            self.deck.append(cid)
+
+
+# ---------------------------------------------------------------------------
+# BATTLE
+# ---------------------------------------------------------------------------
+class Battle:
+    def __init__(self, game, region_id, battle_idx, difficulty):
+        self.game = game
+        self.region_id = region_id
+        self.battle_idx = battle_idx
+        self.difficulty = difficulty
+        self.region = REGIONS[region_id - 1]
+        self.battle_def = self.region['battles'][battle_idx]
+
+        self.player_units = []
+        self.enemy_units = []
+        self.projectiles = []
+        self.particles = []
+        self.damage_numbers = []
+
+        self.player_energy = 5.0
+        self.enemy_energy = 5.0
+        self.max_energy = 10
+
+        lane_top_y = 185
+        lane_bot_y = 435
+        self.player_towers = [Tower(340, lane_top_y, 'player', 0), Tower(340, lane_bot_y, 'player', 1)]
+        self.enemy_towers = [Tower(940, lane_top_y, 'enemy', 0), Tower(940, lane_bot_y, 'enemy', 1)]
+        self.player_castle = Castle(100, 310, 'player')
+        self.enemy_castle = Castle(1180, 310, 'enemy')
+
+        self.match_time = 180.0
+        self.ended = False
+        self.result = None
+        self.end_timer = 0.0
+
+        deck = game.db.get_deck()
+        self.player_deck = deck[:]
+        self.player_hand = self.player_deck[:4]
+        self.player_deck = self.player_deck[4:]
+
+        enemy_deck_pool = DEFAULT_DECK[:]
+        if difficulty >= 3:
+            enemy_deck_pool = ['knight', 'archer', 'shield_guard', 'apprentice', 'fireball',
+                                'healer', 'champion', 'dragon']
+        elif difficulty >= 2:
+            enemy_deck_pool = ['squire', 'knight', 'archer', 'apprentice', 'shield_guard',
+                                'fireball', 'healer', 'phoenix']
+        self.ai = AI(difficulty, enemy_deck_pool)
+
+        self.selected_card_idx = -1
+        self.question = None
+        self.question_pending_action = None
+        self.card_lockout = {}
+        self.message = ""
+        self.message_timer = 0.0
+        self.help_timer = 8.0
+
+        self.q_every_n = game.db.get_setting('question_freq', 1)
+        self.q_counter = 0
+
+        self.allowed_families = self.region['families']
+
+        self.rewards = {'gold': 0, 'xp': 0}
+
+    def add_particle(self, x, y, color, count=6):
+        for _ in range(count):
+            self.particles.append(Particle(x, y, color))
+
+    def add_hit_effect(self, x, y, color):
+        self.add_particle(x, y, color, 4)
+        play_sfx('hit')
+
+    def add_heal_effect(self, x, y):
+        self.add_particle(x, y, GREEN, 5)
+
+    def add_damage_number(self, x, y, amount):
+        self.damage_numbers.append(DamageNumber(x, y, amount, GOLD if amount >= 30 else WHITE))
+
+    def show_message(self, text, dur=2.0):
+        self.message = text
+        self.message_timer = dur
+
+    def spawn_unit(self, team, cid, lane, x=None, y=None):
+        if y is None:
+            y = 185 if lane == 0 else 435
+        if x is None:
+            x = 180 if team == 'player' else 1100
+        lvl = 1
+        if team == 'player':
+            lvl = self.game.db.get_card(cid).get('level', 1)
+        u = Unit(team, lane, x, y, cid, lvl)
+        if team == 'player':
+            self.player_units.append(u)
+        else:
+            self.enemy_units.append(u)
+        self.add_particle(x, y, u.color, 8)
+        play_sfx('deploy')
+
+    def cast_spell(self, team, cid, tx, ty):
+        c = CARD_DEFS[cid]
+        if c['type'] == 'spell':
+            dmg = c['dmg'] * (1.0 + (self.game.db.get_card(cid).get('level',1)-1)*0.1 if team=='player' else 1.0)
+            aoe = c['aoe']
+            if team == 'player':
+                group = list(self.enemy_units) + self.enemy_towers + [self.enemy_castle]
+            else:
+                group = list(self.player_units) + self.player_towers + [self.player_castle]
+            for e in group:
+                if not getattr(e, 'alive', True): continue
+                if math.hypot(e.x - tx, e.y - ty) <= aoe:
+                    e.hp -= dmg
+                    if hasattr(e, 'hit_flash'): e.hit_flash = 0.2
+                    if e.hp <= 0: e.alive = False
+                    self.add_damage_number(e.x, e.y, int(dmg))
+            self.add_particle(tx, ty, c['color'], 25)
+        elif c['type'] == 'spell_heal':
+            heal = c['heal'] * (1.0 + (self.game.db.get_card(cid).get('level',1)-1)*0.1 if team=='player' else 1.0)
+            aoe = c['aoe']
+            allies = self.player_units if team == 'player' else self.enemy_units
+            for a in allies:
+                if a.alive and math.hypot(a.x - tx, a.y - ty) <= aoe:
+                    a.hp = min(a.max_hp, a.hp + heal)
+            self.add_particle(tx, ty, GREEN, 25)
+
+    def try_play_card(self, idx, world_x, world_y):
+        if self.ended: return False
+        if idx < 0 or idx >= 4: return False
+        cid = self.player_hand[idx]
+        c = CARD_DEFS[cid]
+        if c['cost'] > self.player_energy:
+            self.show_message("Not enough energy!")
+            play_sfx('wrong')
+            return False
+        if self.card_lockout.get(cid, 0) > time.time():
+            self.show_message("Card locked out!")
+            return False
+        # check frequency
+        need_q = False
+        if self.q_every_n > 0:
+            self.q_counter += 1
+            if self.q_counter >= self.q_every_n:
+                self.q_counter = 0
+                need_q = True
+        if need_q and self.q_every_n > 0:
+            a, b = self.game.mult.select_question(self.allowed_families)
+            options = self.game.mult.make_options(a, b, 4)
+            self.question = {
+                'a': a, 'b': b, 'answer': a * b,
+                'options': options,
+                'start': time.time(),
+                'feedback': None,
+                'feedback_time': 0.0,
+            }
+            self.question_pending_action = {
+                'idx': idx, 'cid': cid,
+                'wx': world_x, 'wy': world_y,
+            }
+            self.selected_card_idx = -1
             return True
+        else:
+            self._execute_play(idx, cid, world_x, world_y)
+            self.selected_card_idx = -1
+            return True
+
+    def _execute_play(self, idx, cid, wx, wy):
+        c = CARD_DEFS[cid]
+        cost = c['cost']
+        if cost > self.player_energy:
+            return
+        self.player_energy -= cost
+        if c['type'] in ('spell', 'spell_heal'):
+            self.cast_spell('player', cid, wx, wy)
+        else:
+            lane = 0 if wy < 310 else 1
+            y = 185 if lane == 0 else 435
+            x = max(120, min(600, wx))
+            self.spawn_unit('player', cid, lane, x, y)
+        # rotate
+        if self.player_deck:
+            self.player_hand[idx] = self.player_deck.pop(0)
+            self.player_deck.append(cid)
+        else:
+            self.player_deck.append(cid)
+
+    def answer_question(self, choice):
+        if not self.question: return
+        q = self.question
+        rt = time.time() - q['start']
+        correct = (choice == q['answer'])
+        self.game.mult.record(q['a'], q['b'], correct, rt, assisted=False)
+        if correct:
+            play_sfx('correct')
+            q['feedback'] = 'correct'
+            q['feedback_time'] = 0.4
+        else:
+            play_sfx('wrong')
+            q['feedback'] = 'wrong'
+            q['feedback_time'] = 1.3
+            cid = self.question_pending_action['cid'] if self.question_pending_action else None
+            if cid:
+                self.card_lockout[cid] = time.time() + 3.0
+
+    def _resolve_question(self):
+        if not self.question: return
+        q = self.question
+        if q['feedback'] == 'correct':
+            if self.question_pending_action:
+                p = self.question_pending_action
+                self._execute_play(p['idx'], p['cid'], p['wx'], p['wy'])
+            self.question = None
+            self.question_pending_action = None
+        elif q['feedback'] == 'wrong':
+            self.question = None
+            self.question_pending_action = None
+
+    def end_battle(self, result=None):
+        if self.ended: return
+        if result is None:
+            p = self.player_castle.hp + sum(t.hp for t in self.player_towers)
+            e = self.enemy_castle.hp + sum(t.hp for t in self.enemy_towers)
+            if p > e: result = 'win'
+            elif e > p: result = 'lose'
+            else: result = 'draw'
+        self.ended = True
+        self.result = result
+        self.end_timer = 0.0
+
+    def update(self, dt):
+        if self.message_timer > 0:
+            self.message_timer -= dt
+        if self.help_timer > 0:
+            self.help_timer -= dt
+        if self.ended:
+            self.end_timer += dt
+            return
+
+        # energy regen
+        regen = 1.0 / 2.5
+        if self.match_time <= 60:
+            regen *= 2.0
+        self.player_energy = min(self.max_energy, self.player_energy + dt * regen)
+        self.enemy_energy = min(self.max_energy, self.enemy_energy + dt * regen)
+
+        # timer
+        self.match_time -= dt
+        if self.match_time <= 0:
+            self.match_time = 0
+            self.end_battle()
+            return
+
+        # Update entities
+        for u in self.player_units + self.enemy_units:
+            if u.alive: u.update(dt, self)
+        for t in self.player_towers + self.enemy_towers:
+            if t.alive: t.update(dt, self)
+        self.player_castle.update(dt, self)
+        self.enemy_castle.update(dt, self)
+
+        for p in self.projectiles:
+            p.update(dt, self)
+        self.projectiles = [p for p in self.projectiles if p.alive]
+
+        self.player_units = [u for u in self.player_units if u.alive]
+        self.enemy_units = [u for u in self.enemy_units if u.alive]
+        self.player_towers = [t for t in self.player_towers if t.alive]
+        self.enemy_towers = [t for t in self.enemy_towers if t.alive]
+
+        for e in self.particles: e.update(dt)
+        self.particles = [e for e in self.particles if e.alive]
+        for d in self.damage_numbers: d.update(dt)
+        self.damage_numbers = [d for d in self.damage_numbers if d.alive]
+
+        # question feedback timer
+        if self.question and self.question['feedback']:
+            self.question['feedback_time'] -= dt
+            if self.question['feedback_time'] <= 0:
+                self._resolve_question()
+
+        # AI
+        self.ai.update(dt, self)
+
+        if not self.player_castle.alive:
+            self.end_battle('lose')
+        elif not self.enemy_castle.alive:
+            self.end_battle('win')
+
+
+# ---------------------------------------------------------------------------
+# UI HELPERS
+# ---------------------------------------------------------------------------
+class Button:
+    def __init__(self, x, y, w, h, text, callback=None, color=ROYAL_BLUE, size=22, enabled=True):
+        self.rect = pygame.Rect(x, y, w, h)
+        self.text = text
+        self.callback = callback
+        self.color = color
+        self.size = size
+        self.enabled = enabled
+        self.hover = False
+
+    def update(self, mp):
+        self.hover = self.enabled and self.rect.collidepoint(mp)
+
+    def handle_event(self, event):
+        if not self.enabled: return False
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            if self.rect.collidepoint(event.pos):
+                play_sfx('click')
+                if self.callback: self.callback()
+                return True
         return False
 
-    def draw(self, painter: QPainter) -> None:
-        if not self.active:
-            return
-        r = self.radius
-        size = int(r * 2.0)
-        if not self.sliced:
-            painter.save()
-            painter.translate(self.x, self.y)
-            painter.rotate(self.rotation)
-            if self.bomb:
-                painter.setPen(Qt.PenStyle.NoPen)
-                painter.setBrush(QBrush(QColor(255, 60, 60, 80)))
-                painter.drawEllipse(QPointF(0.0, 0.0), r * 1.18, r * 1.18)
-                img = IMAGE_CACHE.get_emoji("💣", size)
-                painter.drawImage(QRectF(-r, -r, size, size), img)
-            else:
-                img = IMAGE_CACHE.get_emoji(self.emoji, size)
-                painter.drawImage(QRectF(-r, -r, size, size), img)
-            painter.restore()
-            if not self.bomb:
-                bw, bh = 62.0, 26.0
-                badge = QRectF(self.x - bw * 0.5, self.y + r - 6.0, bw, bh)
-                painter.setPen(Qt.PenStyle.NoPen)
-                painter.setBrush(QBrush(QColor(16, 21, 34, 232)))
-                painter.drawRoundedRect(badge, 13.0, 13.0)
-                painter.setPen(QPen(QColor("#F4F7FF")))
-                f = QFont()
-                f.setPixelSize(14)
-                f.setBold(True)
-                painter.setFont(f)
-                painter.drawText(badge, Qt.AlignmentFlag.AlignCenter, str(self.answer))
-        else:
-            p = min(1.0, self.slice_progress)
-            ease = 1.0 - (1.0 - p) ** 3
-            sep = ease * r * 1.15
-            fade = max(0.0, 1.0 - p * p)
-            sa = self.slice_angle
-            dxs = math.cos(sa)
-            dys = math.sin(sa)
-            img = IMAGE_CACHE.get_emoji("💣" if self.bomb else self.emoji, size)
-            W = r * 2.2
-            L = r * 2.2
-            for side in (-1, 1):
-                px = -dys * side
-                py = dxs * side
-                ox = px * sep
-                oy = py * sep
-                painter.save()
-                painter.setOpacity(fade)
-                painter.translate(self.x + ox, self.y + oy)
-                poly = QPolygonF([
-                    QPointF(dxs * W, dys * W),
-                    QPointF(dxs * W + px * L, dys * W + py * L),
-                    QPointF(-dxs * W + px * L, -dys * W + py * L),
-                    QPointF(-dxs * W, -dys * W),
-                ])
-                path = QPainterPath()
-                path.addPolygon(poly)
-                path.closeSubpath()
-                painter.setClipPath(path)
-                painter.rotate(self.rotation + side * ease * 22.0)
-                painter.drawImage(QRectF(-r, -r, size, size), img)
-                painter.restore()
+    def draw(self, surf):
+        base = self.color
+        if not self.enabled:
+            base = (60, 65, 80)
+        elif self.hover:
+            base = tuple(min(255, c + 30) for c in base)
+        pygame.draw.rect(surf, base, self.rect, border_radius=8)
+        pygame.draw.rect(surf, GOLD, self.rect, 2, border_radius=8)
+        col = WHITE if self.enabled else (160, 160, 170)
+        draw_text(surf, self.text, self.rect.center, self.size, col, bold=True, center=True)
+
+
+def draw_bg(surf, color1=NAVY, color2=DARK):
+    for y in range(HEIGHT):
+        t = y / HEIGHT
+        c = (int(color1[0]*(1-t)+color2[0]*t),
+             int(color1[1]*(1-t)+color2[1]*t),
+             int(color1[2]*(1-t)+color2[2]*t))
+        pygame.draw.line(surf, c, (0, y), (WIDTH, y))
+
+
+def draw_panel(surf, rect, color=ROYAL_BLUE, border=GOLD, alpha=255):
+    s = pygame.Surface((rect.w, rect.h), pygame.SRCALPHA)
+    s.fill((*color, alpha))
+    surf.blit(s, rect.topleft)
+    pygame.draw.rect(surf, border, rect, 2, border_radius=8)
+
+
+def draw_card_face(surf, cid, x, y, w, h, selected=False, disabled=False, hover=False):
+    c = CARD_DEFS[cid]
+    rar_col = RARITY_COLORS[c['rarity']]
+    base_rect = pygame.Rect(x, y, w, h)
+    fill_col = c['color'] if not disabled else (60, 60, 70)
+    s = pygame.Surface((w, h), pygame.SRCALPHA)
+    s.fill((*fill_col, 200))
+    surf.blit(s, (x, y))
+    # Border
+    bw = 4 if selected else (3 if hover else 2)
+    pygame.draw.rect(surf, rar_col if not selected else GOLD, base_rect, bw, border_radius=6)
+    # Header bar
+    pygame.draw.rect(surf, (*rar_col, 255), pygame.Rect(x, y, w, 22), border_radius=6)
+    # Cost circle
+    pygame.draw.circle(surf, ROYAL_BLUE, (x + 14, y + 14), 12)
+    pygame.draw.circle(surf, GOLD, (x + 14, y + 14), 12, 2)
+    draw_text(surf, c['cost'], (x + 14, y + 14), 16, WHITE, bold=True, center=True)
+    # Name
+    draw_text(surf, c['name'][:13], (x + 28, y + 4), 12, WHITE, bold=True)
+    # Body: stats
+    yy = y + 28
+    if 'hp' in c:
+        draw_text(surf, f"HP {int(c['hp'])}", (x + 6, yy), 12, WHITE); yy += 16
+    if 'dmg' in c and c['dmg'] > 0:
+        draw_text(surf, f"DMG {int(c['dmg'])}", (x + 6, yy), 12, WHITE); yy += 16
+    if 'heal' in c:
+        draw_text(surf, f"HEAL {int(c['heal'])}", (x + 6, yy), 12, WHITE); yy += 16
+    if c['type'] in ('spell', 'spell_heal'):
+        draw_text(surf, f"{c['type']}", (x + 6, yy), 11, CREAM)
+    else:
+        draw_text(surf, c['type'], (x + 6, yy), 11, CREAM)
+    # Rarity footer
+    pygame.draw.rect(surf, (*rar_col, 255), pygame.Rect(x, y + h - 16, w, 16), border_radius=0)
+    draw_text(surf, c['rarity'], (x + w//2, y + h - 8), 10, BLACK, bold=True, center=True)
+    if disabled:
+        s2 = pygame.Surface((w, h), pygame.SRCALPHA)
+        s2.fill((0, 0, 0, 140))
+        surf.blit(s2, (x, y))
+
 
 # ---------------------------------------------------------------------------
-# Game Canvas
+# SCREENS
 # ---------------------------------------------------------------------------
+class Screen:
+    def __init__(self, game):
+        self.game = game
+    def handle_event(self, event): pass
+    def update(self, dt): pass
+    def draw(self, surf): pass
 
-class GameCanvas(QWidget):
-    session_ended = Signal(int, int, int, int)
 
-    def __init__(self, audio: AudioManager, parent: Optional[QWidget] = None) -> None:
-        super().__init__(parent)
-        self.audio = audio
-        self.setMouseTracking(True)
-        self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
-        self.setMinimumSize(640, 480)
-        self.setAttribute(Qt.WidgetAttribute.WA_OpaquePaintEvent, True)
+class MainMenuScreen(Screen):
+    def __init__(self, game):
+        super().__init__(game)
+        cx = WIDTH // 2
+        self.buttons = [
+            Button(cx - 150, 260, 300, 55, "Play Campaign", lambda: game.change_screen(WorldMapScreen(game))),
+            Button(cx - 150, 325, 300, 55, "Cards", lambda: game.change_screen(CollectionScreen(game))),
+            Button(cx - 150, 390, 300, 55, "Deck Builder", lambda: game.change_screen(DeckBuilderScreen(game))),
+            Button(cx - 150, 455, 300, 55, "Academy", lambda: game.change_screen(PracticeScreen(game))),
+            Button(cx - 150, 520, 300, 55, "Statistics", lambda: game.change_screen(StatsScreen(game))),
+            Button(cx - 150, 585, 300, 55, "Settings", lambda: game.change_screen(SettingsScreen(game))),
+        ]
+        self.timer = 0.0
 
-        self.overlay: Optional[QWidget] = None
-        self._bg_cache: Optional[QPixmap] = None
+    def handle_event(self, e):
+        for b in self.buttons: b.handle_event(e)
 
-        self.state = "MENU"
-        self.last_time = time.monotonic()
+    def update(self, dt):
+        self.timer += dt
+        mp = pygame.mouse.get_pos()
+        for b in self.buttons: b.update(mp)
 
-        self.q_a = 0
-        self.q_b = 0
-        self.q_ans = 0
-        self.q_id = 0
+    def draw(self, surf):
+        draw_bg(surf, (20, 30, 70), (8, 12, 30))
+        # Title
+        draw_text(surf, "MULTIPLY ROYALE", (WIDTH//2, 100), 64, GOLD, bold=True, center=True)
+        draw_text(surf, "Rise of the Number Kings", (WIDTH//2, 165), 26, CREAM, center=True)
+        # decorative
+        for i in range(6):
+            y = 210 + i * 12
+            pygame.draw.line(surf, (*PURPLE, 100), (WIDTH//2 - 200, y), (WIDTH//2 + 200, y), 1)
+        for b in self.buttons: b.draw(surf)
+        draw_text(surf, f"Level {self.game.db.get_player()['level']}  •  Gold {self.game.db.get_player()['gold']}",
+                  (WIDTH//2, 680), 18, CREAM, center=True)
 
-        self.score = 0
-        self.combo = 0
-        self.max_combo = 0
-        self.lives = STARTING_LIVES
-        self.energy = 0.0
-        self.rush = False
-        self.rush_timer = 0.0
 
-        self.total_q = 0
-        self.correct_q = 0
-        self.session_time = SESSION_SECONDS
-        self.question_time = QUESTION_SECONDS
+class WorldMapScreen(Screen):
+    def __init__(self, game):
+        super().__init__(game)
+        self.back_btn = Button(20, 660, 120, 45, "Back", lambda: game.change_screen(MainMenuScreen(game)))
+        self.region_buttons = []
+        for i, reg in enumerate(REGIONS):
+            unlocked = game.db.is_region_unlocked(reg['id'])
+            btn = Button(160 + i*210, 260, 190, 220, "", 
+                         (lambda r=reg: self.enter_region(r)) if unlocked else None,
+                         color=reg['color'], enabled=unlocked)
+            self.region_buttons.append((btn, reg, unlocked))
 
-        self.fruits: List[Fruit] = []
-        self.particles: List[Particle] = []
-        self.trail: List[Tuple[QPointF, float]] = []
+    def enter_region(self, region):
+        self.game.change_screen(BattleSelectScreen(self.game, region['id']))
 
-        self.learner = AdaptiveLearner()
-        self.question_resolved = True
-        self.next_at: Optional[float] = None
+    def handle_event(self, e):
+        self.back_btn.handle_event(e)
+        for b, _, _ in self.region_buttons: b.handle_event(e)
+        if e.type == pygame.KEYDOWN and e.key == pygame.K_ESCAPE:
+            self.game.change_screen(MainMenuScreen(self.game))
 
-        self.slicing = False
-        self._pause_time = 0.0
+    def update(self, dt):
+        mp = pygame.mouse.get_pos()
+        self.back_btn.update(mp)
+        for b, _, _ in self.region_buttons: b.update(mp)
 
-        self.timer = QTimer(self)
-        self.timer.setInterval(16)
-        self.timer.setTimerType(Qt.TimerType.PreciseTimer)
-        self.timer.timeout.connect(self._tick)
-
-        self._f_big = QFont()
-        self._f_big.setPixelSize(26)
-        self._f_big.setBold(True)
-        self._f_med = QFont()
-        self._f_med.setPixelSize(16)
-        self._f_med.setBold(True)
-        self._f_small = QFont()
-        self._f_small.setPixelSize(14)
-        self._f_small.setBold(True)
-        self._f_q = QFont()
-        self._f_q.setPixelSize(28)
-        self._f_q.setBold(True)
-
-    # -- lifecycle ----------------------------------------------------------
-
-    def start(self) -> None:
-        self.score = 0
-        self.combo = 0
-        self.max_combo = 0
-        self.lives = STARTING_LIVES
-        self.energy = 0.0
-        self.rush = False
-        self.rush_timer = 0.0
-        self.total_q = 0
-        self.correct_q = 0
-        self.session_time = SESSION_SECONDS
-        self.question_time = QUESTION_SECONDS
-        self.fruits.clear()
-        self.particles.clear()
-        self.trail.clear()
-        self.question_resolved = True
-        self.next_at = None
-        self.slicing = False
-        self.state = "PLAYING"
-        self.last_time = time.monotonic()
-        self._new_question()
-        if not self.timer.isActive():
-            self.timer.start()
-        self.update()
-
-    def pause(self) -> None:
-        if self.state == "PLAYING":
-            self.state = "PAUSED"
-            self.timer.stop()
-            self._pause_time = time.monotonic()
-            self.slicing = False
-            self.trail.clear()
-            self.update()
-
-    def resume(self) -> None:
-        if self.state == "PAUSED":
-            now = time.monotonic()
-            if self.next_at is not None:
-                self.next_at += now - self._pause_time
-            self.state = "PLAYING"
-            self.last_time = now
-            self.slicing = False
-            self.trail.clear()
-            self.timer.start()
-            self.update()
-
-    def stop(self) -> None:
-        self.state = "MENU"
-        self.timer.stop()
-        self.fruits.clear()
-        self.particles.clear()
-        self.trail.clear()
-        self.next_at = None
-        self.question_resolved = True
-        self.slicing = False
-        self.update()
-
-    # -- question flow ------------------------------------------------------
-
-    def _new_question(self) -> None:
-        self.q_id += 1
-        self.q_a, self.q_b, self.q_ans = self.learner.next_question()
-        self.question_time = QUESTION_SECONDS
-        self.question_resolved = False
-        self.next_at = None
-        self.fruits = [f for f in self.fruits if f.sliced]
-        self._spawn_fruits()
-
-    def _spawn_fruits(self) -> None:
-        w = max(MIN_W, float(self.width()))
-        h = max(MIN_H, float(self.height()))
-
-        num_answers = 4 if self.rush else 3
-        has_bomb = (not self.rush) and random.random() < BOMB_CHANCE
-        total_items = num_answers + (1 if has_bomb else 0)
-
-        answers: List[int] = [self.q_ans]
-        candidates = set()
-        for da in (-2, -1, 1, 2, 3, -3):
-            for db in (-2, -1, 1, 2):
-                na = self.q_a + da
-                nb = self.q_b + db
-                if na < 1 or nb < 1:
-                    continue
-                v = na * nb
-                if v > 0 and v != self.q_ans:
-                    candidates.add(v)
-        for delta in (-12, -8, -6, -4, 4, 6, 8, 12):
-            v = self.q_ans + delta
-            if v > 0 and v != self.q_ans:
-                candidates.add(v)
-        pool = [c for c in candidates if 1 <= c <= 200]
-        random.shuffle(pool)
-        while len(answers) < num_answers and pool:
-            v = pool.pop()
-            if v not in answers:
-                answers.append(v)
-        guard = 0
-        while len(answers) < num_answers and guard < 200:
-            guard += 1
-            v = random.randint(1, 144)
-            if v != self.q_ans and v not in answers:
-                answers.append(v)
-        while len(answers) < num_answers:
-            answers.append(self.q_ans + len(answers) + 1)
-
-        random.shuffle(answers)
-
-        emoji_pool = list(FRUITS)
-        random.shuffle(emoji_pool)
-        while len(emoji_pool) < total_items:
-            emoji_pool.extend(FRUITS)
-
-        slot_w = w / float(total_items)
-        ans_idx = 0
-        for i in range(total_items):
-            x = slot_w * (i + 0.5) + random.uniform(-22.0, 22.0)
-            x = max(SLICE_RADIUS + 8.0, min(w - SLICE_RADIUS - 8.0, x))
-            y = h + 60.0
-            vx = (w * 0.5 - x) * random.uniform(0.55, 1.05)
-            peak_y = h * 0.22
-            delta = max(120.0, (h + 60.0) - peak_y)
-            vy = -math.sqrt(2.0 * GRAVITY * delta) * random.uniform(0.94, 1.06)
-            if has_bomb and i == total_items - 1:
-                fruit = Fruit(x, y, vx, vy, "💣", 0, False,
-                              self.q_id, (w, h), bomb=True)
+    def draw(self, surf):
+        draw_bg(surf, (25, 20, 50), (10, 8, 25))
+        draw_text(surf, "World Map", (WIDTH//2, 60), 48, GOLD, bold=True, center=True)
+        for b, reg, unlocked in self.region_buttons:
+            if not unlocked:
+                pygame.draw.rect(surf, (40, 40, 50), b.rect, border_radius=8)
+                pygame.draw.rect(surf, (90, 90, 100), b.rect, 2, border_radius=8)
+                draw_text(surf, "Locked", b.rect.center, 22, (150, 150, 160), bold=True, center=True)
             else:
-                ans = answers[ans_idx] if ans_idx < len(answers) else self.q_ans
-                ans_idx += 1
-                fruit = Fruit(x, y, vx, vy, emoji_pool[i], ans,
-                              ans == self.q_ans, self.q_id, (w, h))
-            self.fruits.append(fruit)
+                pygame.draw.rect(surf, reg['color'], b.rect, border_radius=8)
+                pygame.draw.rect(surf, GOLD, b.rect, 3, border_radius=8)
+                draw_text(surf, reg['name'], (b.rect.centerx, b.rect.y + 30), 20, WHITE, bold=True, center=True)
+                done, total = self.game.db.region_progress(reg['id'])
+                draw_text(surf, f"{done}/{total} battles", (b.rect.centerx, b.rect.y + 80), 16, WHITE, center=True)
+                # Progress bar
+                p_r = pygame.Rect(b.rect.x + 20, b.rect.y + 130, b.rect.w - 40, 14)
+                pygame.draw.rect(surf, DARK, p_r, border_radius=4)
+                fill = pygame.Rect(p_r.x, p_r.y, int(p_r.w * done/total), p_r.h)
+                pygame.draw.rect(surf, GOLD, fill, border_radius=4)
+                pygame.draw.rect(surf, WHITE, p_r, 1, border_radius=4)
+        self.back_btn.draw(surf)
 
-    def _schedule_next(self, delay: float) -> None:
-        self.next_at = time.monotonic() + max(0.05, delay)
 
-    # -- resolution ---------------------------------------------------------
+class BattleSelectScreen(Screen):
+    def __init__(self, game, region_id):
+        super().__init__(game)
+        self.region_id = region_id
+        self.region = REGIONS[region_id - 1]
+        self.back_btn = Button(20, 660, 120, 45, "Back", lambda: game.change_screen(WorldMapScreen(game)))
+        self.battle_buttons = []
+        for i, b in enumerate(self.region['battles']):
+            won = game.db.is_won(region_id, i)
+            unlocked = (i == 0) or game.db.is_won(region_id, i-1)
+            def cb(idx=i):
+                game.change_screen(BattleScreen(game, region_id, idx, self.region['battles'][idx]['diff']))
+            btn = Button(160, 130 + i*130, WIDTH - 320, 100, b['name'],
+                         cb if unlocked else None,
+                         color=EMERALD if won else (ROYAL_BLUE if not b.get('boss') else PURPLE),
+                         enabled=unlocked)
+            self.battle_buttons.append((btn, b, won, unlocked))
 
-    def _resolve_correct(self) -> None:
-        if self.question_resolved:
-            return
-        self.question_resolved = True
-        self.total_q += 1
-        self.correct_q += 1
-        self.combo += 1
-        if self.combo > self.max_combo:
-            self.max_combo = self.combo
+    def handle_event(self, e):
+        self.back_btn.handle_event(e)
+        for btn, _, _, _ in self.battle_buttons: btn.handle_event(e)
 
-        base = 100
-        speed_bonus = int(50.0 * max(0.0, self.question_time / QUESTION_SECONDS))
-        mult = 1 + (self.combo // 5)
-        gained = (base + speed_bonus) * mult
-        if self.rush:
-            gained *= 2
-        self.score += gained
+    def update(self, dt):
+        mp = pygame.mouse.get_pos()
+        self.back_btn.update(mp)
+        for btn, _, _, _ in self.battle_buttons: btn.update(mp)
 
-        if not self.rush:
-            self.energy = min(RUSH_ENERGY_MAX, self.energy + 14.0)
-            if self.energy >= RUSH_ENERGY_MAX:
-                self.rush = True
-                self.rush_timer = RUSH_DURATION
-                self.energy = 0.0
-                self.audio.play("combo")
-            else:
-                self.audio.play_correct(self.combo - 1)
-        else:
-            self.audio.play_correct(self.combo - 1)
-
-        self.learner.record(self.q_a, self.q_b, True)
-        self._schedule_next(0.35)
-
-    def _resolve_wrong(self) -> None:
-        if self.question_resolved:
-            return
-        self.question_resolved = True
-        self.total_q += 1
-        self.combo = 0
-        self.energy = max(0.0, self.energy - 30.0)
-        self.lives -= 1
-        self.learner.record(self.q_a, self.q_b, False)
-        self.audio.play("wrong")
-        if self.lives <= 0:
-            self._end_session()
-            return
-        self._schedule_next(0.55)
-
-    def _resolve_bomb(self) -> None:
-        if self.question_resolved:
-            return
-        self.question_resolved = True
-        self.total_q += 1
-        self.combo = 0
-        self.energy = max(0.0, self.energy - 45.0)
-        self.lives -= 1
-        self.learner.record(self.q_a, self.q_b, False)
-        self.audio.play("bomb")
-        if self.lives <= 0:
-            self._end_session()
-            return
-        self._schedule_next(0.55)
-
-    def _resolve_missed(self) -> None:
-        if self.question_resolved:
-            return
-        self.question_resolved = True
-        self.total_q += 1
-        self.combo = 0
-        self.energy = max(0.0, self.energy - 15.0)
-        self.lives -= 1
-        self.learner.record(self.q_a, self.q_b, False)
-        self.audio.play("wrong")
-        if self.lives <= 0:
-            self._end_session()
-            return
-        self._schedule_next(0.5)
-
-    def _end_session(self) -> None:
-        if self.state != "PLAYING":
-            return
-        self.state = "RESULTS"
-        self.timer.stop()
-        self.next_at = None
-        self.question_resolved = True
-        self.fruits.clear()
-        self.particles.clear()
-        self.trail.clear()
-        self.slicing = False
-        try:
-            self.audio.play("result")
-        except Exception:
-            pass
-        self.session_ended.emit(
-            int(self.score), int(self.correct_q), int(self.total_q), int(self.max_combo)
-        )
-        self.update()
-
-    # -- game loop ----------------------------------------------------------
-
-    def _tick(self) -> None:
-        now = time.monotonic()
-        real_dt = now - self.last_time
-        self.last_time = now
-        if real_dt < 0.0:
-            real_dt = 0.0
-        physics_dt = real_dt if real_dt < PHYSICS_DT_CLAMP else PHYSICS_DT_CLAMP
-
-        if self.state != "PLAYING":
-            return
-
-        self.session_time -= real_dt
-        if self.session_time <= 0.0:
-            self.session_time = 0.0
-            self._end_session()
-            return
-
-        if self.rush:
-            self.rush_timer -= real_dt
-            if self.rush_timer <= 0.0:
-                self.rush = False
-                self.rush_timer = 0.0
-
-        if self.trail:
-            cutoff = now - TRAIL_LIFETIME
-            if self.trail[0][1] < cutoff:
-                self.trail = [(pt, t) for pt, t in self.trail if t >= cutoff]
-
-        if self.particles:
-            keep = []
-            for pt in self.particles:
-                if pt.update(physics_dt):
-                    keep.append(pt)
-            self.particles = keep
-            if len(self.particles) > MAX_PARTICLES:
-                del self.particles[:len(self.particles) - MAX_PARTICLES]
-
-        correct_missed = False
-        if self.fruits:
-            keep_fruits: List[Fruit] = []
-            for f in self.fruits:
-                if f.update(physics_dt):
-                    keep_fruits.append(f)
+    def draw(self, surf):
+        draw_bg(surf, (25, 20, 50), (10, 8, 25))
+        draw_text(surf, self.region['name'], (WIDTH//2, 60), 44, self.region['color'], bold=True, center=True)
+        draw_text(surf, f"Families: {', '.join(str(f) for f in self.region['families'])}",
+                  (WIDTH//2, 105), 20, CREAM, center=True)
+        for btn, b, won, unlocked in self.battle_buttons:
+            if unlocked:
+                if won:
+                    pygame.draw.rect(surf, EMERALD, btn.rect, border_radius=8)
                 else:
-                    if (not f.sliced) and f.correct and (not f.missed) \
-                            and f.qid == self.q_id:
-                        correct_missed = True
-            self.fruits = keep_fruits
-
-        if not self.question_resolved:
-            self.question_time -= real_dt
-            if self.question_time <= 0.0:
-                self.question_time = 0.0
-                self._resolve_missed()
-                return
-            if correct_missed:
-                self._resolve_missed()
-                return
-
-        if self.next_at is not None and now >= self.next_at:
-            self.next_at = None
-            self._new_question()
-
-        self.update()
-
-    # -- input --------------------------------------------------------------
-
-    def mousePressEvent(self, event) -> None:
-        if self.state != "PLAYING":
-            return
-        if event.button() != Qt.MouseButton.LeftButton:
-            return
-        try:
-            pos = event.position()
-        except AttributeError:
-            pos = QPointF(event.pos())
-        self.slicing = True
-        self.trail = [(QPointF(pos), time.monotonic())]
-
-    def mouseReleaseEvent(self, event) -> None:
-        if event.button() == Qt.MouseButton.LeftButton:
-            self.slicing = False
-
-    def mouseMoveEvent(self, event) -> None:
-        if self.state != "PLAYING" or not self.slicing:
-            return
-        try:
-            pos = event.position()
-        except AttributeError:
-            pos = QPointF(event.pos())
-        now = time.monotonic()
-        if self.trail:
-            last = self.trail[-1][0]
-            line = QLineF(last, pos)
-            if line.length() >= MIN_SLICE_SEGMENT:
-                self._slice_line(line)
-        self.trail.append((QPointF(pos), now))
-        if len(self.trail) > TRAIL_MAX:
-            del self.trail[:len(self.trail) - TRAIL_MAX]
-
-    def _slice_line(self, line: QLineF) -> None:
-        if not self.fruits:
-            return
-        hits: List[Fruit] = []
-        for f in self.fruits:
-            if f.sliced or not f.active:
-                continue
-            if f.check_slice(line):
-                hits.append(f)
-                self._spawn_slice_particles(f)
-        if not hits:
-            return
-        self.audio.play("slice")
-        if self.question_resolved:
-            return
-        qid_hits = [f for f in hits if f.qid == self.q_id]
-        if not qid_hits:
-            return
-        if any(f.bomb for f in qid_hits):
-            self._resolve_bomb()
-        elif any(f.correct for f in qid_hits):
-            self._resolve_correct()
-        else:
-            self._resolve_wrong()
-
-    def _spawn_slice_particles(self, fruit: Fruit) -> None:
-        if fruit.bomb:
-            colors = [QColor("#FF5D73"), QColor("#FFB300")]
-            n = 20
-        else:
-            colors = [QColor("#FFD24A"), QColor("#FF8A3D"), QColor("#36D6B0")]
-            n = 14
-        for i in range(n):
-            c = colors[i % len(colors)]
-            self.particles.append(Particle(fruit.x, fruit.y, c, spark=True))
-
-    # -- painting -----------------------------------------------------------
-
-    def resizeEvent(self, event) -> None:
-        super().resizeEvent(event)
-        self._bg_cache = None
-        w = float(max(MIN_W, self.width()))
-        h = float(max(MIN_H, self.height()))
-        for f in self.fruits:
-            f.bounds_w = w
-            f.bounds_h = h
-        if self.overlay is not None:
-            self.overlay.setGeometry(0, 0, self.width(), self.height())
-
-    def _ensure_bg(self) -> Optional[QPixmap]:
-        if self._bg_cache is not None and \
-                self._bg_cache.width() == self.width() and \
-                self._bg_cache.height() == self.height():
-            return self._bg_cache
-        w = self.width()
-        h = self.height()
-        if w <= 0 or h <= 0:
-            return None
-        pm = QPixmap(w, h)
-        p = QPainter(pm)
-        try:
-            grad = QLinearGradient(0.0, 0.0, 0.0, float(h))
-            grad.setColorAt(0.0, QColor("#3A2317"))
-            grad.setColorAt(0.45, QColor("#2A1810"))
-            grad.setColorAt(1.0, QColor("#170C06"))
-            p.fillRect(0, 0, w, h, QBrush(grad))
-
-            p.setPen(QPen(QColor(0, 0, 0, 70), 1))
-            plank = 76
-            y = plank
-            while y < h:
-                p.drawLine(0, y, w, y)
-                y += plank
-
-            p.setPen(QPen(QColor(0, 0, 0, 40), 1))
-            y = plank // 2
-            while y < h:
-                p.drawLine(0, y, w, y)
-                y += plank
-
-            rad = QRadialGradient(QPointF(w * 0.5, h * 0.5),
-                                  max(w, h) * 0.78)
-            rad.setColorAt(0.0, QColor(0, 0, 0, 0))
-            rad.setColorAt(0.65, QColor(0, 0, 0, 40))
-            rad.setColorAt(1.0, QColor(0, 0, 0, 150))
-            p.fillRect(0, 0, w, h, QBrush(rad))
-        finally:
-            p.end()
-        self._bg_cache = pm
-        return pm
-
-    def paintEvent(self, event) -> None:
-        painter = QPainter(self)
-        try:
-            painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
-            painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform, True)
-
-            bg = self._ensure_bg()
-            if bg is not None:
-                painter.drawPixmap(0, 0, bg)
+                    pygame.draw.rect(surf, btn.color, btn.rect, border_radius=8)
+                pygame.draw.rect(surf, GOLD, btn.rect, 2, border_radius=8)
+                draw_text(surf, b['name'], (btn.rect.centerx, btn.rect.y + 35), 28, WHITE, bold=True, center=True)
+                diff_names = {1:'Beginner',2:'Warrior',3:'Commander',4:'Shadow King'}
+                draw_text(surf, f"Difficulty: {diff_names[b['diff']]}", 
+                          (btn.rect.centerx, btn.rect.y + 70), 16, CREAM, center=True)
+                if won:
+                    draw_text(surf, "✓ DEFEATED", (btn.rect.right - 80, btn.rect.y + 40), 20, GOLD, bold=True)
             else:
-                painter.fillRect(self.rect(), QColor("#1A0F08"))
+                pygame.draw.rect(surf, (40, 40, 50), btn.rect, border_radius=8)
+                draw_text(surf, "Locked", btn.rect.center, 24, GRAY, bold=True, center=True)
+        self.back_btn.draw(surf)
 
-            for f in self.fruits:
-                f.draw(painter)
-            for pt in self.particles:
-                pt.draw(painter)
 
-            if self.state == "PLAYING":
-                self._draw_trail(painter)
+class BattleScreen(Screen):
+    def __init__(self, game, region_id, battle_idx, difficulty):
+        super().__init__(game)
+        self.battle = Battle(game, region_id, battle_idx, difficulty)
+        self.card_rects = []
+        hand_y = 560
+        total_w = 4 * 130 + 3 * 10
+        start_x = 365
+        for i in range(4):
+            self.card_rects.append(pygame.Rect(start_x + i*140, hand_y, 130, 150))
+        self.pause_btn = Button(WIDTH - 130, 15, 110, 35, "Pause", self.pause)
+        self.finalized = False
+        self.show_exit = False
 
-            if self.state in ("PLAYING", "PAUSED"):
-                self._draw_hud(painter)
-        finally:
-            painter.end()
+    def pause(self):
+        self.game.change_screen(PauseScreen(self.game, self))
 
-    def _draw_trail(self, painter: QPainter) -> None:
-        if len(self.trail) < 2:
+    def handle_event(self, e):
+        if self.battle.ended:
+            if e.type == pygame.MOUSEBUTTONDOWN and self.battle.end_timer > 1.5:
+                self._finalize()
             return
-        path = QPainterPath()
-        path.moveTo(self.trail[0][0])
-        for pt, _ in self.trail[1:]:
-            path.lineTo(pt)
-        painter.setBrush(Qt.BrushStyle.NoBrush)
-        pen = QPen(QBrush(QColor(54, 214, 176, 190)), 7.0,
-                   Qt.PenStyle.SolidLine,
-                   Qt.PenCapStyle.RoundCap,
-                   Qt.PenJoinStyle.RoundJoin)
-        painter.setPen(pen)
-        painter.drawPath(path)
-        pen2 = QPen(QBrush(QColor(255, 255, 255, 230)), 2.0,
-                    Qt.PenStyle.SolidLine,
-                    Qt.PenCapStyle.RoundCap,
-                    Qt.PenJoinStyle.RoundJoin)
-        painter.setPen(pen2)
-        painter.drawPath(path)
+        if self.battle.question:
+            if e.type == pygame.KEYDOWN:
+                if pygame.K_1 <= e.key <= pygame.K_4:
+                    idx = e.key - pygame.K_1
+                    self._choose_answer(idx)
+            elif e.type == pygame.MOUSEBUTTONDOWN and e.button == 1:
+                # option rects computed in draw
+                if hasattr(self, 'option_rects'):
+                    for i, r in enumerate(self.option_rects):
+                        if r.collidepoint(e.pos):
+                            self._choose_answer(i)
+                            break
+            return
+        self.pause_btn.handle_event(e)
+        if e.type == pygame.KEYDOWN and e.key == pygame.K_ESCAPE:
+            self.pause()
+            return
+        if e.type == pygame.MOUSEBUTTONDOWN and e.button == 1:
+            # card click
+            for i, r in enumerate(self.card_rects):
+                if r.collidepoint(e.pos):
+                    self.select_card(i)
+                    return
+            # battlefield click
+            if 60 <= e.pos[0] <= 1220 and 100 <= e.pos[1] <= 550:
+                if self.battle.selected_card_idx >= 0:
+                    idx = self.battle.selected_card_idx
+                    cid = self.battle.player_hand[idx]
+                    c = CARD_DEFS[cid]
+                    if c['type'] in ('spell', 'spell_heal'):
+                        self.battle.try_play_card(idx, e.pos[0], e.pos[1])
+                    else:
+                        if e.pos[0] > 640:
+                            self.battle.show_message("Deploy on your side!")
+                            return
+                        self.battle.try_play_card(idx, e.pos[0], e.pos[1])
+        if e.type == pygame.KEYDOWN:
+            if pygame.K_1 <= e.key <= pygame.K_4:
+                self.select_card(e.key - pygame.K_1)
 
-    def _draw_hud(self, painter: QPainter) -> None:
-        w = self.width()
+    def select_card(self, i):
+        if self.battle.question: return
+        cid = self.battle.player_hand[i]
+        if CARD_DEFS[cid]['cost'] > self.battle.player_energy:
+            self.battle.show_message("Not enough energy!")
+            play_sfx('wrong')
+            self.battle.selected_card_idx = -1
+            return
+        if self.battle.card_lockout.get(cid, 0) > time.time():
+            self.battle.show_message("Card is locked!")
+            return
+        if self.battle.selected_card_idx == i:
+            self.battle.selected_card_idx = -1
+        else:
+            self.battle.selected_card_idx = i
 
-        # question box
-        qw = 300.0
-        qh = 66.0
-        q_rect = QRectF((w - qw) * 0.5, 14.0, qw, qh)
-        painter.setPen(Qt.PenStyle.NoPen)
-        painter.setBrush(QBrush(QColor(12, 16, 28, 224)))
-        painter.drawRoundedRect(q_rect, 16.0, 16.0)
-        painter.setPen(QPen(QColor(255, 210, 74, 90), 1.0))
-        painter.setBrush(Qt.BrushStyle.NoBrush)
-        painter.drawRoundedRect(q_rect, 16.0, 16.0)
-        painter.setPen(QPen(QColor("#F4F7FF")))
-        painter.setFont(self._f_q)
-        painter.drawText(q_rect, Qt.AlignmentFlag.AlignCenter,
-                         f"{self.q_a} × {self.q_b} = ?")
+    def _choose_answer(self, opt_idx):
+        if not self.battle.question: return
+        q = self.battle.question
+        if q['feedback']: return
+        choice = q['options'][opt_idx]
+        self.battle.answer_question(choice)
 
-        # question timer bar
-        bar_w = 260.0
-        bar_x = (w - bar_w) * 0.5
-        bar_y = q_rect.bottom() + 8.0
-        painter.setPen(Qt.PenStyle.NoPen)
-        painter.setBrush(QBrush(QColor(255, 255, 255, 36)))
-        painter.drawRoundedRect(QRectF(bar_x, bar_y, bar_w, 7.0), 4.0, 4.0)
-        ratio = 0.0
-        if not self.question_resolved:
-            ratio = max(0.0, min(1.0, self.question_time / QUESTION_SECONDS))
-        if ratio > 0.0:
-            if ratio < 0.3:
-                bar_color = QColor("#FF5D73")
-            elif ratio < 0.6:
-                bar_color = QColor("#FFD24A")
+    def _finalize(self):
+        if self.finalized: return
+        self.finalized = True
+        b = self.battle
+        if b.result == 'win':
+            play_sfx('victory')
+            b.rewards['gold'] = 50 + self.battle.difficulty * 25
+            b.rewards['xp'] = 30 + self.battle.difficulty * 15
+            if b.battle_def.get('boss'):
+                b.rewards['gold'] += 100
+                b.rewards['xp'] += 50
+            p = self.game.db.get_player()
+            gold = p['gold'] + b.rewards['gold']
+            xp = p['xp'] + b.rewards['xp']
+            level = p['level']
+            while xp >= level * 100:
+                xp -= level * 100
+                level += 1
+            battles_won = p['battles_won'] + 1
+            self.game.db.update_player(gold=gold, xp=xp, level=level, battles_won=battles_won)
+            self.game.db.set_won(b.region_id, b.battle_idx, 1)
+            self.game.change_screen(VictoryScreen(self.game, self.battle, self))
+        else:
+            play_sfx('defeat')
+            self.game.change_screen(DefeatScreen(self.game, self.battle, self))
+
+    def update(self, dt):
+        self.battle.update(dt)
+        self.pause_btn.update(pygame.mouse.get_pos())
+        if self.battle.ended and not self.finalized and self.battle.end_timer > 1.5:
+            self._finalize()
+
+    def draw(self, surf):
+        b = self.battle
+        # battlefield bg
+        pygame.draw.rect(surf, (40, 70, 50), pygame.Rect(60, 100, 1160, 450))
+        # river
+        pygame.draw.rect(surf, (40, 80, 140), pygame.Rect(620, 100, 40, 450))
+        # bridges
+        pygame.draw.rect(surf, (150, 120, 80), pygame.Rect(620, 170, 40, 30))
+        pygame.draw.rect(surf, (150, 120, 80), pygame.Rect(620, 420, 40, 30))
+        # lanes
+        pygame.draw.line(surf, (60, 100, 60), (60, 310), (1220, 310), 1)
+
+        # top bar
+        pygame.draw.rect(surf, DARK, pygame.Rect(0, 0, WIDTH, 70))
+        pygame.draw.rect(surf, GOLD, pygame.Rect(0, 70, WIDTH, 2))
+        # player HP
+        p_hp = b.player_castle.hp
+        e_hp = b.enemy_castle.hp
+        draw_text(surf, f"Player Castle: {int(p_hp)}", (20, 10), 18, WHITE)
+        bar = pygame.Rect(20, 35, 300, 16)
+        pygame.draw.rect(surf, DARK, bar)
+        pygame.draw.rect(surf, GREEN, (bar.x, bar.y, int(bar.w * max(0, p_hp / b.player_castle.max_hp)), bar.h))
+        pygame.draw.rect(surf, WHITE, bar, 1)
+        # enemy
+        draw_text(surf, f"Enemy Castle: {int(e_hp)}", (WIDTH - 20, 10), 18, WHITE) if False else None
+        draw_text(surf, f"Enemy Castle: {int(e_hp)}", (WIDTH - 320, 10), 18, WHITE)
+        bar2 = pygame.Rect(WIDTH - 320, 35, 300, 16)
+        pygame.draw.rect(surf, DARK, bar2)
+        pygame.draw.rect(surf, RED, (bar2.x, bar2.y, int(bar2.w * max(0, e_hp / b.enemy_castle.max_hp)), bar2.h))
+        pygame.draw.rect(surf, WHITE, bar2, 1)
+        # timer
+        mm = int(b.match_time) // 60
+        ss = int(b.match_time) % 60
+        draw_text(surf, f"{mm}:{ss:02d}", (WIDTH//2, 35), 32, GOLD, bold=True, center=True)
+
+        # towers
+        for t in b.player_towers + b.enemy_towers:
+            col = LBLUE if t.team == 'player' else RED
+            if t.hit_flash > 0: col = WHITE
+            pygame.draw.rect(surf, (60, 60, 90), (int(t.x)-22, int(t.y)-40, 44, 80))
+            pygame.draw.rect(surf, col, (int(t.x)-18, int(t.y)-36, 36, 70), 2)
+            pygame.draw.circle(surf, col, (int(t.x), int(t.y)-10), 10)
+            # hp bar
+            bar = pygame.Rect(int(t.x)-25, int(t.y)+45, 50, 6)
+            pygame.draw.rect(surf, DARK, bar)
+            pygame.draw.rect(surf, GREEN, (bar.x, bar.y, int(bar.w * t.hp/t.max_hp), bar.h))
+            draw_text(surf, str(int(t.hp)), (int(t.x), int(t.y)+58), 12, WHITE, center=True)
+
+        # castles
+        for c in [b.player_castle, b.enemy_castle]:
+            col = GOLD if c.team == 'player' else RED
+            if c.hit_flash > 0: col = WHITE
+            x, y = int(c.x), int(c.y)
+            pygame.draw.polygon(surf, (60, 60, 90), [(x-40, y+40), (x+40, y+40), (x+40, y-20), (x+20, y-40), (x-20, y-40), (x-40, y-20)])
+            pygame.draw.polygon(surf, col, [(x-40, y+40), (x+40, y+40), (x+40, y-20), (x+20, y-40), (x-20, y-40), (x-40, y-20)], 2)
+            bar = pygame.Rect(x-45, y+48, 90, 8)
+            pygame.draw.rect(surf, DARK, bar)
+            pygame.draw.rect(surf, GREEN if c.team=='player' else RED, (bar.x, bar.y, int(bar.w * c.hp/c.max_hp), bar.h))
+            draw_text(surf, str(int(c.hp)), (x, y+64), 12, WHITE, center=True)
+
+        # units
+        for u in b.player_units + b.enemy_units:
+            col = u.color
+            if u.hit_flash > 0: col = WHITE
+            x, y = int(u.x), int(u.y)
+            if u.flying:
+                pygame.draw.circle(surf, col, (x, y), u.radius)
+                pygame.draw.circle(surf, WHITE, (x, y), u.radius, 2)
+                # wings
+                pygame.draw.line(surf, col, (x-u.radius-8, y-6), (x+u.radius+8, y-6), 3)
             else:
-                bar_color = QColor("#36D6B0")
-            painter.setBrush(QBrush(bar_color))
-            painter.drawRoundedRect(QRectF(bar_x, bar_y, bar_w * ratio, 7.0),
-                                    4.0, 4.0)
+                pygame.draw.rect(surf, col, (x-u.radius, y-u.radius, u.radius*2, u.radius*2), border_radius=4)
+                pygame.draw.rect(surf, WHITE if u.team=='player' else RED, (x-u.radius, y-u.radius, u.radius*2, u.radius*2), 1, border_radius=4)
+            # hp bar
+            hb = pygame.Rect(x-18, y-u.radius-10, 36, 4)
+            pygame.draw.rect(surf, DARK, hb)
+            pygame.draw.rect(surf, GREEN, (hb.x, hb.y, int(hb.w * u.hp/u.max_hp), hb.h))
 
-        # top-left score & timer
-        painter.setFont(self._f_big)
-        painter.setPen(QPen(QColor("#FFD24A")))
-        painter.drawText(22, 44, f"{self.score}")
-        painter.setFont(self._f_small)
-        painter.setPen(QPen(QColor("#AAB5CC")))
-        painter.drawText(22, 24, "SCORE")
+        # projectiles
+        for p in b.projectiles:
+            pygame.draw.circle(surf, p.color, (int(p.x), int(p.y)), 5)
+            pygame.draw.circle(surf, WHITE, (int(p.x), int(p.y)), 5, 1)
 
-        painter.setFont(self._f_big)
-        painter.setPen(QPen(QColor("#36D6B0")))
-        painter.drawText(22, 86, f"{int(math.ceil(self.session_time))}s")
-        painter.setFont(self._f_small)
-        painter.setPen(QPen(QColor("#AAB5CC")))
-        painter.drawText(22, 68, "TIME")
+        # particles
+        for pt in b.particles:
+            alpha = int(255 * (pt.life / pt.max_life))
+            s = pygame.Surface((pt.size*2, pt.size*2), pygame.SRCALPHA)
+            pygame.draw.circle(s, (*pt.color, alpha), (pt.size, pt.size), pt.size)
+            surf.blit(s, (pt.x - pt.size, pt.y - pt.size))
 
-        # energy bar
-        e_x, e_y, e_w, e_h = 22.0, 100.0, 168.0, 12.0
-        painter.setPen(Qt.PenStyle.NoPen)
-        painter.setBrush(QBrush(QColor(255, 255, 255, 36)))
-        painter.drawRoundedRect(QRectF(e_x, e_y, e_w, e_h), 6.0, 6.0)
-        if self.rush:
-            ef = max(0.0, min(1.0, self.rush_timer / RUSH_DURATION))
-            e_col = QColor("#FF8A3D")
+        # damage numbers
+        for d in b.damage_numbers:
+            alpha = int(255 * (d.life / 0.9))
+            color = (*d.color, alpha)
+            f = get_font(18, True)
+            img = f.render(str(d.amount), True, d.color)
+            img.set_alpha(alpha)
+            surf.blit(img, (d.x, d.y))
+
+        # selected card outline on battlefield
+        if b.selected_card_idx >= 0 and not b.question:
+            cid = b.player_hand[b.selected_card_idx]
+            c = CARD_DEFS[cid]
+            if c['type'] not in ('spell', 'spell_heal'):
+                pygame.draw.rect(surf, (*GOLD, 60), pygame.Rect(60, 100, 580, 450), 3)
+
+        # bottom bar
+        pygame.draw.rect(surf, DARK, pygame.Rect(0, 550, WIDTH, 170))
+        pygame.draw.rect(surf, GOLD, pygame.Rect(0, 550, WIDTH, 2))
+
+        # energy panel
+        draw_text(surf, "Energy", (185, 562), 18, GOLD, bold=True, center=True)
+        draw_text(surf, f"{int(b.player_energy)}/{b.max_energy}", (185, 590), 28, WHITE, bold=True, center=True)
+        for i in range(10):
+            r = pygame.Rect(40 + i*30, 615, 24, 20)
+            filled = (i+1) <= int(b.player_energy)
+            pygame.draw.rect(surf, ROYAL_BLUE if filled else (40, 40, 60), r, border_radius=3)
+            pygame.draw.rect(surf, GOLD if filled else GRAY, r, 1, border_radius=3)
+
+        # cards
+        for i, r in enumerate(self.card_rects):
+            cid = b.player_hand[i]
+            c = CARD_DEFS[cid]
+            disabled = c['cost'] > b.player_energy or (b.card_lockout.get(cid, 0) > time.time())
+            selected = (b.selected_card_idx == i)
+            hover = r.collidepoint(pygame.mouse.get_pos())
+            draw_card_face(surf, cid, r.x, r.y, r.w, r.h, selected, disabled, hover)
+            draw_text(surf, str(i+1), (r.x + 8, r.y + r.h - 8), 14, GOLD, bold=True, center=True)
+
+        # info panel
+        info_r = pygame.Rect(940, 562, 320, 148)
+        draw_panel(surf, info_r, (20, 30, 60), GOLD)
+        if b.selected_card_idx >= 0:
+            cid = b.player_hand[b.selected_card_idx]
+            c = CARD_DEFS[cid]
+            draw_text(surf, c['name'], (info_r.x + 10, info_r.y + 8), 18, GOLD, bold=True)
+            lines = [f"Cost: {c['cost']}"]
+            if 'hp' in c: lines.append(f"HP: {int(c['hp'])}")
+            if 'dmg' in c and c['dmg'] > 0: lines.append(f"DMG: {int(c['dmg'])}")
+            if 'range' in c: lines.append(f"Range: {int(c['range'])}")
+            lines.append(f"Type: {c['type']}")
+            lines.append(c.get('desc',''))
+            yy = info_r.y + 32
+            for ln in lines:
+                draw_text(surf, ln, (info_r.x + 10, yy), 13, CREAM); yy += 18
         else:
-            ef = max(0.0, min(1.0, self.energy / RUSH_ENERGY_MAX))
-            e_col = QColor("#237BFF")
-        if ef > 0.0:
-            painter.setBrush(QBrush(e_col))
-            painter.drawRoundedRect(QRectF(e_x, e_y, e_w * ef, e_h), 6.0, 6.0)
-        painter.setFont(self._f_small)
-        painter.setPen(QPen(QColor("#AAB5CC")))
-        label = "RUSH" if self.rush else "ENERGY"
-        painter.drawText(int(e_x + e_w + 8), int(e_y + 11), label)
+            draw_text(surf, "Select a card, then click", (info_r.x + 10, info_r.y + 20), 14, CREAM)
+            draw_text(surf, "the battlefield to deploy.", (info_r.x + 10, info_r.y + 40), 14, CREAM)
+            draw_text(surf, "Spells can target anywhere.", (info_r.x + 10, info_r.y + 60), 13, CREAM)
+            draw_text(surf, f"Question frequency: every {self.game.db.get_setting('question_freq', 1)} card(s)",
+                      (info_r.x + 10, info_r.y + 90), 12, GOLD)
 
-        # top-right lives / combo
-        painter.setFont(self._f_small)
-        painter.setPen(QPen(QColor("#AAB5CC")))
-        painter.drawText(w - 22 - 130, 24, "LIVES")
-        hearts = "❤ " * max(0, self.lives)
-        painter.setFont(self._f_med)
-        painter.setPen(QPen(QColor("#FF5D73")))
-        painter.drawText(w - 22 - 130, 48, hearts if hearts else "—")
+        # message
+        if b.message_timer > 0:
+            draw_text(surf, b.message, (WIDTH//2, 530), 22, GOLD, bold=True, center=True)
 
-        if self.combo > 1:
-            painter.setFont(self._f_med)
-            painter.setPen(QPen(QColor("#FFD24A")))
-            painter.drawText(w - 22 - 130, 76, f"COMBO ×{self.combo}")
+        # pause btn
+        self.pause_btn.draw(surf)
 
-        if self.rush:
-            painter.setFont(self._f_med)
-            painter.setPen(QPen(QColor("#FF8A3D")))
-            painter.drawText(w - 22 - 130, 100,
-                             f"RUSH  {self.rush_timer:0.1f}s  (2×)")
+        # Question popup
+        if b.question:
+            self._draw_question(surf)
 
-# ---------------------------------------------------------------------------
-# Styled widgets
-# ---------------------------------------------------------------------------
+        # help
+        if b.help_timer > 0:
+            help_txt = "Solve the multiplication to deploy! Press 1-4 or click."
+            draw_text(surf, help_txt, (WIDTH//2, 90), 18, GOLD, bold=True, center=True)
 
-class StyledButton(QPushButton):
-    def __init__(self, text: str, primary: bool = False,
-                 parent: Optional[QWidget] = None) -> None:
-        super().__init__(text, parent)
-        self.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.setMinimumHeight(44)
-        f = QFont()
-        f.setPixelSize(16)
-        f.setBold(True)
-        self.setFont(f)
-        if primary:
-            self.setStyleSheet("""
-                QPushButton {
-                    background-color: #FF5D73;
-                    color: #FFFFFF;
-                    border: none;
-                    border-radius: 11px;
-                    padding: 10px 26px;
-                }
-                QPushButton:hover { background-color: #FF7A8C; }
-                QPushButton:pressed { background-color: #D94860; }
-                QPushButton:disabled { background-color: #555; color: #999; }
-            """)
+        # End overlay
+        if b.ended:
+            s = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
+            s.fill((0, 0, 0, 150))
+            surf.blit(s, (0, 0))
+            if b.result == 'win':
+                draw_text(surf, "VICTORY!", (WIDTH//2, 300), 72, GOLD, bold=True, center=True)
+            elif b.result == 'lose':
+                draw_text(surf, "DEFEAT", (WIDTH//2, 300), 72, RED, bold=True, center=True)
+            else:
+                draw_text(surf, "DRAW", (WIDTH//2, 300), 72, CREAM, bold=True, center=True)
+            if b.end_timer > 1.5:
+                draw_text(surf, "Click to continue", (WIDTH//2, 380), 22, CREAM, center=True)
+
+    def _draw_question(self, surf):
+        q = self.battle.question
+        overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
+        overlay.fill((0, 0, 0, 160))
+        surf.blit(overlay, (0, 0))
+        panel = pygame.Rect(WIDTH//2 - 350, 180, 700, 380)
+        draw_panel(surf, panel, (25, 35, 70), GOLD)
+        draw_text(surf, "Multiplication Challenge!", (WIDTH//2, panel.y + 30), 28, GOLD, bold=True, center=True)
+        draw_text(surf, f"{q['a']} × {q['b']} = ?", (WIDTH//2, panel.y + 100), 60, WHITE, bold=True, center=True)
+        self.option_rects = []
+        for i, opt in enumerate(q['options']):
+            col = i % 2
+            row = i // 2
+            x = panel.x + 60 + col * 300
+            y = panel.y + 170 + row * 75
+            r = pygame.Rect(x, y, 260, 60)
+            self.option_rects.append(r)
+            hover = r.collidepoint(pygame.mouse.get_pos()) and not q['feedback']
+            bg = ROYAL_BLUE if not hover else (60, 100, 200)
+            if q['feedback'] == 'correct' and opt == q['answer']:
+                bg = GREEN
+            if q['feedback'] == 'wrong' and opt == q['answer']:
+                bg = GREEN
+            pygame.draw.rect(surf, bg, r, border_radius=8)
+            pygame.draw.rect(surf, GOLD, r, 2, border_radius=8)
+            draw_text(surf, f"{i+1}. {opt}", r.center, 28, WHITE, bold=True, center=True)
+        if q['feedback'] == 'correct':
+            draw_text(surf, "Correct! Deploying...", (WIDTH//2, panel.bottom - 30), 22, GREEN, bold=True, center=True)
+        elif q['feedback'] == 'wrong':
+            draw_text(surf, f"Wrong! The answer was {q['answer']}", (WIDTH//2, panel.bottom - 30), 22, RED, bold=True, center=True)
+
+
+class VictoryScreen(Screen):
+    def __init__(self, game, battle, parent_screen):
+        super().__init__(game)
+        self.battle = battle
+        self.parent = parent_screen
+        self.t = 0.0
+        self.continue_btn = Button(WIDTH//2 - 120, 560, 240, 55, "Continue",
+                                    lambda: game.change_screen(WorldMapScreen(game)))
+
+    def handle_event(self, e):
+        self.continue_btn.handle_event(e)
+
+    def update(self, dt):
+        self.t += dt
+        self.continue_btn.update(pygame.mouse.get_pos())
+
+    def draw(self, surf):
+        draw_bg(surf, (30, 25, 10), (10, 8, 20))
+        draw_text(surf, "VICTORY!", (WIDTH//2, 100), 82, GOLD, bold=True, center=True)
+        for i in range(8):
+            x = 100 + i*140
+            y = 200 + int(math.sin(self.t*2 + i)*10)
+            pygame.draw.circle(surf, GOLD, (x, y), 8)
+        draw_text(surf, "Rewards", (WIDTH//2, 260), 36, CREAM, bold=True, center=True)
+        draw_text(surf, f"+{self.battle.rewards['gold']} Gold", (WIDTH//2, 320), 28, GOLD, center=True)
+        draw_text(surf, f"+{self.battle.rewards['xp']} XP", (WIDTH//2, 360), 28, LBLUE, center=True)
+        if self.battle.battle_def.get('boss'):
+            draw_text(surf, "Boss Defeated!", (WIDTH//2, 420), 32, PURPLE, bold=True, center=True)
+            draw_text(surf, "Next region may be unlocked!", (WIDTH//2, 460), 22, GOLD, center=True)
+        self.continue_btn.draw(surf)
+
+
+class DefeatScreen(Screen):
+    def __init__(self, game, battle, parent_screen):
+        super().__init__(game)
+        self.buttons = [
+            Button(WIDTH//2 - 260, 500, 240, 55, "Retry",
+                   lambda: game.change_screen(BattleScreen(game, battle.region_id, battle.battle_idx, battle.difficulty))),
+            Button(WIDTH//2 + 20, 500, 240, 55, "Back to Map",
+                   lambda: game.change_screen(WorldMapScreen(game))),
+        ]
+
+    def handle_event(self, e):
+        for b in self.buttons: b.handle_event(e)
+
+    def update(self, dt):
+        for b in self.buttons: b.update(pygame.mouse.get_pos())
+
+    def draw(self, surf):
+        draw_bg(surf, (30, 10, 10), (10, 5, 15))
+        draw_text(surf, "DEFEAT", (WIDTH//2, 200), 90, RED, bold=True, center=True)
+        draw_text(surf, "Your castle has fallen...", (WIDTH//2, 320), 26, CREAM, center=True)
+        draw_text(surf, "Practice your multiplication to strengthen your forces!",
+                  (WIDTH//2, 370), 20, GOLD, center=True)
+        for b in self.buttons: b.draw(surf)
+
+
+class PauseScreen(Screen):
+    def __init__(self, game, battle_screen):
+        super().__init__(game)
+        self.parent = battle_screen
+        self.buttons = [
+            Button(WIDTH//2 - 150, 280, 300, 55, "Resume",
+                   lambda: game.change_screen(battle_screen)),
+            Button(WIDTH//2 - 150, 345, 300, 55, "Main Menu",
+                   lambda: game.change_screen(MainMenuScreen(game))),
+            Button(WIDTH//2 - 150, 410, 300, 55, "Settings",
+                   lambda: game.change_screen(SettingsScreen(game, back=battle_screen))),
+        ]
+
+    def handle_event(self, e):
+        for b in self.buttons: b.handle_event(e)
+        if e.type == pygame.KEYDOWN and e.key == pygame.K_ESCAPE:
+            self.game.change_screen(self.parent)
+
+    def update(self, dt):
+        for b in self.buttons: b.update(pygame.mouse.get_pos())
+
+    def draw(self, surf):
+        self.parent.draw(surf)
+        s = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
+        s.fill((0, 0, 0, 180))
+        surf.blit(s, (0, 0))
+        draw_text(surf, "PAUSED", (WIDTH//2, 180), 64, GOLD, bold=True, center=True)
+        for b in self.buttons: b.draw(surf)
+
+
+class DeckBuilderScreen(Screen):
+    def __init__(self, game):
+        super().__init__(game)
+        self.deck = game.db.get_deck()
+        self.selected_slot = -1
+        self.back_btn = Button(20, 660, 120, 45, "Back",
+                                lambda: game.change_screen(MainMenuScreen(game)))
+        self.save_btn = Button(WIDTH - 160, 660, 140, 45, "Save", self.save_deck)
+        self.card_list = sorted(ALL_CARDS)
+
+    def save_deck(self):
+        if len(set(self.deck)) == 8 and len(self.deck) == 8:
+            self.game.db.set_deck(self.deck)
+            self.game.db.set_setting('deck_saved', True)
+
+    def handle_event(self, e):
+        self.back_btn.handle_event(e)
+        self.save_btn.handle_event(e)
+        if e.type == pygame.MOUSEBUTTONDOWN and e.button == 1:
+            # Check deck slots
+            for i in range(8):
+                r = self._slot_rect(i)
+                if r.collidepoint(e.pos):
+                    self.selected_slot = i
+                    return
+            # Check collection
+            for i, cid in enumerate(self.card_list):
+                r = self._collection_rect(i)
+                if r.collidepoint(e.pos):
+                    self.add_card(cid)
+                    return
+
+    def add_card(self, cid):
+        if self.selected_slot < 0:
+            return
+        # Count occurrences
+        if cid in self.deck:
+            if self.deck.count(cid) > 0 and self.selected_slot >= 0:
+                self.deck[self.selected_slot] = cid
         else:
-            self.setStyleSheet("""
-                QPushButton {
-                    background-color: #237BFF;
-                    color: #F4F7FF;
-                    border: none;
-                    border-radius: 11px;
-                    padding: 10px 26px;
-                }
-                QPushButton:hover { background-color: #36D6B0; color: #0B0F1A; }
-                QPushButton:pressed { background-color: #1D62CD; color: #F4F7FF; }
-                QPushButton:disabled { background-color: #555; color: #999; }
-            """)
+            self.deck[self.selected_slot] = cid
 
-class MainMenuWidget(QWidget):
-    play_requested = Signal()
-    settings_requested = Signal()
-    exit_requested = Signal()
+    def _slot_rect(self, i):
+        return pygame.Rect(40 + (i % 4) * 145, 130 + (i // 4) * 165, 130, 150)
 
-    def __init__(self, parent: Optional[QWidget] = None) -> None:
-        super().__init__(parent)
-        self.setObjectName("menuRoot")
-        self.setStyleSheet("""
-            QWidget#menuRoot {
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #2A1810, stop:0.55 #181226, stop:1 #0B0F1A);
-            }
-        """)
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(40, 40, 40, 40)
-        layout.setSpacing(12)
-        layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+    def _collection_rect(self, i):
+        cols = 8
+        return pygame.Rect(40 + (i % cols) * 150, 470 + (i // cols) * 40, 140, 35)
 
-        title = QLabel("FRUIT SLASH")
-        tf = QFont()
-        tf.setPixelSize(56)
-        tf.setBold(True)
-        title.setFont(tf)
-        title.setStyleSheet("color: #FFD24A; letter-spacing: 4px;")
-        title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+    def update(self, dt):
+        self.back_btn.update(pygame.mouse.get_pos())
+        self.save_btn.update(pygame.mouse.get_pos())
 
-        subtitle = QLabel("Multiplication Arcade")
-        sf = QFont()
-        sf.setPixelSize(18)
-        subtitle.setFont(sf)
-        subtitle.setStyleSheet("color: #AAB5CC; letter-spacing: 1px;")
-        subtitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
+    def draw(self, surf):
+        draw_bg(surf)
+        draw_text(surf, "Deck Builder", (WIDTH//2, 40), 42, GOLD, bold=True, center=True)
+        draw_text(surf, "Click a slot, then click a card below to add it.", (WIDTH//2, 90), 16, CREAM, center=True)
+        draw_text(surf, f"Deck size: {len(set(self.deck))}/8 unique", (WIDTH//2, 112), 14, GOLD, center=True)
+        for i in range(8):
+            r = self._slot_rect(i)
+            if i < len(self.deck):
+                draw_card_face(surf, self.deck[i], r.x, r.y, r.w, r.h, selected=(self.selected_slot==i))
+            else:
+                pygame.draw.rect(surf, (30,30,50), r, border_radius=6)
+                pygame.draw.rect(surf, GRAY, r, 2, border_radius=6)
+        # Collection
+        draw_text(surf, "Collection", (WIDTH//2, 445), 22, GOLD, bold=True, center=True)
+        for i, cid in enumerate(self.card_list):
+            r = self._collection_rect(i)
+            c = CARD_DEFS[cid]
+            in_deck = cid in self.deck
+            col = c['color'] if not in_deck else (80, 100, 60)
+            pygame.draw.rect(surf, col, r, border_radius=4)
+            pygame.draw.rect(surf, RARITY_COLORS[c['rarity']], r, 2, border_radius=4)
+            draw_text(surf, c['name'][:12], (r.x + 5, r.y + 8), 12, WHITE)
+        self.back_btn.draw(surf)
+        self.save_btn.draw(surf)
+        if self.selected_slot >= 0:
+            draw_text(surf, f"Selected slot {self.selected_slot+1}",
+                      (WIDTH//2, 645), 16, GOLD, center=True)
 
-        self.stats_label = QLabel("")
-        stf = QFont()
-        stf.setPixelSize(15)
-        stf.setBold(True)
-        self.stats_label.setFont(stf)
-        self.stats_label.setStyleSheet("color: #36D6B0;")
-        self.stats_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.hint_label = QLabel("Slice the fruit with the correct answer.  Arrow keys not required — use your mouse.")
-        hf = QFont()
-        hf.setPixelSize(12)
-        self.hint_label.setFont(hf)
-        self.hint_label.setStyleSheet("color: #6B7794;")
-        self.hint_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+class CollectionScreen(Screen):
+    def __init__(self, game):
+        super().__init__(game)
+        self.back_btn = Button(20, 660, 120, 45, "Back",
+                                lambda: game.change_screen(MainMenuScreen(game)))
+        self.selected = None
+        self.cards_data = game.db.all_cards()
+        self.card_list = sorted(ALL_CARDS)
 
-        btn_play = StyledButton("PLAY", primary=True)
-        btn_play.setFixedSize(250, 58)
-        btn_play.clicked.connect(self.play_requested.emit)
+    def _card_rect(self, i):
+        cols = 5
+        return pygame.Rect(50 + (i % cols) * 240, 120 + (i // cols) * 200, 220, 180)
 
-        btn_settings = StyledButton("SETTINGS")
-        btn_settings.setFixedSize(250, 48)
-        btn_settings.clicked.connect(self.settings_requested.emit)
+    def handle_event(self, e):
+        self.back_btn.handle_event(e)
+        if e.type == pygame.MOUSEBUTTONDOWN and e.button == 1:
+            for i, cid in enumerate(self.card_list):
+                if self._card_rect(i).collidepoint(e.pos):
+                    self.selected = cid
+                    return
+            # Upgrade button
+            if self.selected and hasattr(self, 'upgrade_rect'):
+                if self.upgrade_rect.collidepoint(e.pos):
+                    self.upgrade_selected()
+            if hasattr(self, 'back_detail_rect') and self.selected:
+                if self.back_detail_rect.collidepoint(e.pos):
+                    self.selected = None
 
-        btn_exit = StyledButton("EXIT")
-        btn_exit.setFixedSize(250, 48)
-        btn_exit.clicked.connect(self.exit_requested.emit)
+    def upgrade_selected(self):
+        cid = self.selected
+        cd = self.cards_data.get(cid, {})
+        c = CARD_DEFS[cid]
+        level = cd.get('level', 1)
+        dupes = cd.get('dupes', 0)
+        if level >= 5:
+            return
+        cost = 100 * level + 50
+        dupes_needed = level
+        p = self.game.db.get_player()
+        if p['gold'] < cost:
+            return
+        if dupes < dupes_needed:
+            # Deduct gold, but require dupes OR allow purchase
+            self.game.db.update_player(gold=p['gold'] - cost)
+            self.game.db.update_card(cid, level=level+1, dupes=max(0, dupes-dupes_needed))
+        else:
+            self.game.db.update_player(gold=p['gold'] - cost)
+            self.game.db.update_card(cid, level=level+1, dupes=dupes-dupes_needed)
+        self.cards_data = self.game.db.all_cards()
 
-        layout.addStretch(1)
-        layout.addWidget(title)
-        layout.addWidget(subtitle)
-        layout.addSpacing(14)
-        layout.addWidget(self.stats_label)
-        layout.addSpacing(28)
-        layout.addWidget(btn_play, 0, Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(btn_settings, 0, Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(btn_exit, 0, Qt.AlignmentFlag.AlignCenter)
-        layout.addSpacing(20)
-        layout.addWidget(self.hint_label)
-        layout.addStretch(1)
+    def update(self, dt):
+        self.back_btn.update(pygame.mouse.get_pos())
 
-    def update_stats(self, best: int, xp: int, rank: str) -> None:
-        self.stats_label.setText(
-            f"BEST  {best}        XP  {xp}        RANK  {rank.upper()}"
-        )
+    def draw(self, surf):
+        draw_bg(surf)
+        draw_text(surf, "Card Collection", (WIDTH//2, 40), 42, GOLD, bold=True, center=True)
+        p = self.game.db.get_player()
+        draw_text(surf, f"Gold: {p['gold']}", (WIDTH - 200, 40), 22, GOLD, bold=True)
+        for i, cid in enumerate(self.card_list):
+            r = self._card_rect(i)
+            cd = self.cards_data.get(cid, {})
+            lvl = cd.get('level', 1)
+            draw_card_face(surf, cid, r.x, r.y, r.w, r.h, hover=r.collidepoint(pygame.mouse.get_pos()))
+            draw_text(surf, f"Lv {lvl}", (r.x + r.w - 10, r.y + 5), 14, WHITE, bold=True)
+        if self.selected:
+            self._draw_detail(surf)
+        self.back_btn.draw(surf)
 
-class SettingsWidget(QWidget):
-    back_requested = Signal()
-    volume_changed = Signal(float)
-    mute_changed = Signal(bool)
+    def _draw_detail(self, surf):
+        s = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
+        s.fill((0, 0, 0, 180))
+        surf.blit(s, (0, 0))
+        panel = pygame.Rect(WIDTH//2 - 300, 150, 600, 450)
+        draw_panel(surf, panel, (25, 35, 70), GOLD)
+        cid = self.selected
+        c = CARD_DEFS[cid]
+        cd = self.cards_data.get(cid, {})
+        lvl = cd.get('level', 1)
+        dupes = cd.get('dupes', 0)
+        draw_text(surf, c['name'], (panel.centerx, panel.y + 30), 32, GOLD, bold=True, center=True)
+        draw_text(surf, f"Rarity: {c['rarity']}", (panel.centerx, panel.y + 70), 18, RARITY_COLORS[c['rarity']], center=True)
+        draw_text(surf, f"Level: {lvl}/5", (panel.centerx, panel.y + 100), 20, WHITE, center=True)
+        info = []
+        if 'hp' in c: info.append(f"HP: {int(c['hp'] * (1 + (lvl-1)*0.1))}")
+        if 'dmg' in c and c['dmg'] > 0: info.append(f"DMG: {int(c['dmg'] * (1 + (lvl-1)*0.1))}")
+        if 'heal' in c: info.append(f"HEAL: {int(c['heal'] * (1 + (lvl-1)*0.1))}")
+        info.append(f"Cost: {c['cost']}")
+        info.append(f"Type: {c['type']}")
+        if 'range' in c: info.append(f"Range: {int(c['range'])}")
+        for i, line in enumerate(info):
+            draw_text(surf, line, (panel.x + 40, panel.y + 140 + i*25), 18, CREAM)
+        draw_text(surf, c.get('desc', ''), (panel.centerx, panel.y + 330), 16, CREAM, center=True)
+        # Upgrade
+        p = self.game.db.get_player()
+        if lvl < 5:
+            cost = 100 * lvl + 50
+            up_rect = pygame.Rect(panel.centerx - 150, panel.y + 370, 300, 45)
+            self.upgrade_rect = up_rect
+            can_up = p['gold'] >= cost
+            col = EMERALD if can_up else GRAY
+            pygame.draw.rect(surf, col, up_rect, border_radius=8)
+            pygame.draw.rect(surf, GOLD, up_rect, 2, border_radius=8)
+            draw_text(surf, f"Upgrade - {cost} Gold", up_rect.center, 20, WHITE, bold=True, center=True)
+            draw_text(surf, f"Duplicates: {dupes}", (panel.centerx, panel.y + 425), 14, GOLD, center=True)
+        else:
+            draw_text(surf, "MAX LEVEL", (panel.centerx, panel.y + 390), 24, GOLD, bold=True, center=True)
+        # close
+        close_rect = pygame.Rect(panel.right - 50, panel.y + 10, 40, 40)
+        pygame.draw.rect(surf, RED, close_rect, border_radius=6)
+        draw_text(surf, "X", close_rect.center, 24, WHITE, bold=True, center=True)
+        self.back_detail_rect = close_rect
 
-    def __init__(self, audio: AudioManager, parent: Optional[QWidget] = None) -> None:
-        super().__init__(parent)
-        self.audio = audio
-        self.setObjectName("settingsRoot")
-        self.setStyleSheet("""
-            QWidget#settingsRoot {
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #181226, stop:1 #0B0F1A);
-            }
-        """)
-        layout = QVBoxLayout(self)
-        layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        layout.setSpacing(18)
-        layout.setContentsMargins(40, 40, 40, 40)
 
-        title = QLabel("SETTINGS")
-        tf = QFont()
-        tf.setPixelSize(36)
-        tf.setBold(True)
-        title.setFont(tf)
-        title.setStyleSheet("color: #FFD24A; letter-spacing: 3px;")
-        title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+class PracticeScreen(Screen):
+    def __init__(self, game):
+        super().__init__(game)
+        self.back_btn = Button(20, 660, 120, 45, "Back",
+                                lambda: game.change_screen(MainMenuScreen(game)))
+        self.question = None
+        self.feedback = None
+        self.feedback_t = 0.0
+        self.start_t = 0.0
+        self.option_rects = []
+        self.families = [1,2,3,4,5,6,7,8,9,10]
+        self.stats = game.mult.overall_stats()
 
-        self.mute_cb = QCheckBox("Mute audio")
-        self.mute_cb.setStyleSheet("""
-            QCheckBox { color: #F4F7FF; font-size: 15px; spacing: 10px; }
-            QCheckBox::indicator { width: 18px; height: 18px; }
-        """)
-        self.mute_cb.setChecked(bool(self.audio.muted))
-        self.mute_cb.toggled.connect(self._on_mute)
+    def _new_question(self):
+        a, b = self.game.mult.select_question(self.families)
+        self.question = {
+            'a': a, 'b': b, 'answer': a*b,
+            'options': self.game.mult.make_options(a, b, 4),
+        }
+        self.start_t = time.time()
+        self.feedback = None
 
-        vol_row = QHBoxLayout()
-        vol_row.setSpacing(14)
-        vol_label = QLabel("Volume")
-        vol_label.setStyleSheet("color: #F4F7FF; font-size: 15px;")
-        self.vol_slider = QSlider(Qt.Orientation.Horizontal)
-        self.vol_slider.setRange(0, 100)
-        self.vol_slider.setValue(int(round(self.audio.volume * 100.0)))
-        self.vol_slider.setFixedWidth(240)
-        self.vol_slider.valueChanged.connect(self._on_volume)
-        self.vol_value = QLabel(f"{int(round(self.audio.volume * 100.0))}%")
-        self.vol_value.setStyleSheet("color: #AAB5CC; font-size: 14px;")
-        self.vol_value.setFixedWidth(50)
-        vol_row.addWidget(vol_label)
-        vol_row.addWidget(self.vol_slider)
-        vol_row.addWidget(self.vol_value)
+    def handle_event(self, e):
+        self.back_btn.handle_event(e)
+        if not self.question:
+            if e.type == pygame.MOUSEBUTTONDOWN and e.button == 1:
+                self._new_question()
+            return
+        if self.feedback: return
+        if e.type == pygame.KEYDOWN and pygame.K_1 <= e.key <= pygame.K_4:
+            self._answer(e.key - pygame.K_1)
+        elif e.type == pygame.MOUSEBUTTONDOWN and e.button == 1:
+            for i, r in enumerate(self.option_rects):
+                if r.collidepoint(e.pos):
+                    self._answer(i)
+                    return
 
-        btn_back = StyledButton("BACK")
-        btn_back.setFixedWidth(220)
-        btn_back.clicked.connect(self.back_requested.emit)
+    def _answer(self, i):
+        q = self.question
+        if i >= len(q['options']): return
+        choice = q['options'][i]
+        rt = time.time() - self.start_t
+        correct = (choice == q['answer'])
+        self.game.mult.record(q['a'], q['b'], correct, rt)
+        self.feedback = 'correct' if correct else 'wrong'
+        self.feedback_t = 1.3
+        self.stats = self.game.mult.overall_stats()
+        if correct: play_sfx('correct')
+        else: play_sfx('wrong')
 
-        layout.addWidget(title, 0, Qt.AlignmentFlag.AlignCenter)
-        layout.addSpacing(20)
-        layout.addWidget(self.mute_cb, 0, Qt.AlignmentFlag.AlignCenter)
-        layout.addLayout(vol_row)
-        layout.addSpacing(24)
-        layout.addWidget(btn_back, 0, Qt.AlignmentFlag.AlignCenter)
+    def update(self, dt):
+        self.back_btn.update(pygame.mouse.get_pos())
+        if self.feedback:
+            self.feedback_t -= dt
+            if self.feedback_t <= 0:
+                self._new_question()
 
-    def _on_mute(self, checked: bool) -> None:
-        self.audio.set_muted(bool(checked))
-        self.mute_changed.emit(bool(checked))
+    def draw(self, surf):
+        draw_bg(surf, (20, 30, 50), (10, 15, 30))
+        draw_text(surf, "Multiplication Academy", (WIDTH//2, 50), 42, GOLD, bold=True, center=True)
+        draw_text(surf, f"Total: {self.stats['total']}  •  Accuracy: {self.stats['accuracy']:.1f}%  •  Mastered: {self.stats['mastered']}/144",
+                  (WIDTH//2, 100), 18, CREAM, center=True)
+        if not self.question:
+            draw_text(surf, "Click to begin practicing!", (WIDTH//2, 350), 30, WHITE, bold=True, center=True)
+        else:
+            q = self.question
+            panel = pygame.Rect(WIDTH//2 - 350, 180, 700, 380)
+            draw_panel(surf, panel, (25, 35, 70), GOLD)
+            draw_text(surf, f"{q['a']} × {q['b']} = ?", (WIDTH//2, panel.y + 80), 60, WHITE, bold=True, center=True)
+            self.option_rects = []
+            for i, opt in enumerate(q['options']):
+                col = i % 2
+                row = i // 2
+                r = pygame.Rect(panel.x + 60 + col*300, panel.y + 170 + row*75, 260, 60)
+                self.option_rects.append(r)
+                bg = ROYAL_BLUE
+                if self.feedback == 'correct' and opt == q['answer']: bg = GREEN
+                if self.feedback == 'wrong' and opt == q['answer']: bg = GREEN
+                if self.feedback == 'wrong' and opt != q['answer']: bg = (100, 50, 50)
+                pygame.draw.rect(surf, bg, r, border_radius=8)
+                pygame.draw.rect(surf, GOLD, r, 2, border_radius=8)
+                draw_text(surf, f"{i+1}. {opt}", r.center, 28, WHITE, bold=True, center=True)
+            if self.feedback == 'correct':
+                draw_text(surf, "Correct!", (WIDTH//2, panel.bottom - 30), 26, GREEN, bold=True, center=True)
+            elif self.feedback == 'wrong':
+                draw_text(surf, f"Answer: {q['answer']}", (WIDTH//2, panel.bottom - 30), 26, RED, bold=True, center=True)
+        self.back_btn.draw(surf)
 
-    def _on_volume(self, v: int) -> None:
-        v = max(0, min(100, int(v)))
-        self.audio.set_volume(v / 100.0)
-        self.vol_value.setText(f"{v}%")
-        self.volume_changed.emit(v / 100.0)
 
-class PauseOverlay(QWidget):
-    resume_requested = Signal()
-    restart_requested = Signal()
-    menu_requested = Signal()
+class StatsScreen(Screen):
+    def __init__(self, game):
+        super().__init__(game)
+        self.back_btn = Button(20, 660, 120, 45, "Back",
+                                lambda: game.change_screen(MainMenuScreen(game)))
+        self.facts = game.db.all_facts()
+        self.stats = game.mult.overall_stats()
 
-    def __init__(self, parent: Optional[QWidget] = None) -> None:
-        super().__init__(parent)
-        self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
-        self.setStyleSheet("background-color: rgba(6, 9, 18, 210);")
+    def handle_event(self, e):
+        self.back_btn.handle_event(e)
 
-        outer = QVBoxLayout(self)
-        outer.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        outer.setContentsMargins(0, 0, 0, 0)
+    def update(self, dt):
+        self.back_btn.update(pygame.mouse.get_pos())
 
-        panel = QFrame()
-        panel.setObjectName("pausePanel")
-        panel.setFixedSize(320, 340)
-        panel.setStyleSheet("""
-            QFrame#pausePanel {
-                background-color: #171D35;
-                border-radius: 18px;
-                border: 1px solid #2A3352;
-            }
-        """)
-        pl = QVBoxLayout(panel)
-        pl.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        pl.setSpacing(14)
-        pl.setContentsMargins(28, 28, 28, 28)
+    def draw(self, surf):
+        draw_bg(surf)
+        draw_text(surf, "Learning Statistics", (WIDTH//2, 40), 42, GOLD, bold=True, center=True)
+        # Summary
+        draw_text(surf, f"Total Attempts: {self.stats['total']}", (WIDTH//2 - 300, 100), 20, CREAM)
+        draw_text(surf, f"Correct: {self.stats['correct']}", (WIDTH//2 - 300, 130), 20, CREAM)
+        draw_text(surf, f"Accuracy: {self.stats['accuracy']:.1f}%", (WIDTH//2 - 300, 160), 20, CREAM)
+        draw_text(surf, f"Mastered Facts: {self.stats['mastered']}/144", (WIDTH//2 + 100, 100), 20, GOLD)
+        # Grid 1..10
+        fact_map = {(f['a'], f['b']): f for f in self.facts}
+        cell_w = 44
+        cell_h = 32
+        start_x = WIDTH//2 - 250
+        start_y = 210
+        draw_text(surf, "Mastery Grid (row × col)", (WIDTH//2, 185), 18, GOLD, bold=True, center=True)
+        for b in range(1, 11):
+            draw_text(surf, str(b), (start_x + (b-1)*cell_w + cell_w//2, start_y - 15), 14, WHITE, center=True)
+        for a in range(1, 11):
+            draw_text(surf, str(a), (start_x - 20, start_y + (a-1)*cell_h + cell_h//2 - 6), 14, WHITE, center=True)
+            for b in range(1, 11):
+                f = fact_map.get((a, b)) or fact_map.get((b, a))
+                mastery = f['mastery'] if f else 0
+                if mastery >= 4: col = GREEN
+                elif mastery >= 2: col = (200, 200, 60)
+                elif mastery >= 1: col = (200, 140, 60)
+                else: col = (80, 60, 60)
+                r = pygame.Rect(start_x + (b-1)*cell_w, start_y + (a-1)*cell_h, cell_w-2, cell_h-2)
+                pygame.draw.rect(surf, col, r, border_radius=3)
+                if f and f['attempts'] > 0:
+                    draw_text(surf, str(f['attempts']), r.center, 11, BLACK, center=True)
+        # Weakest facts
+        weak = sorted([f for f in self.facts if f['attempts'] > 0 and f['mastery'] < 3],
+                      key=lambda x: (-x['incorrect'], -x['attempts']))[:8]
+        draw_text(surf, "Needs Practice:", (WIDTH//2, 560), 20, GOLD, bold=True, center=True)
+        for i, f in enumerate(weak):
+            col = i % 4
+            row = i // 4
+            draw_text(surf, f"{f['a']}×{f['b']}: {f['incorrect']} wrong/{f['attempts']}",
+                      (WIDTH//2 - 400 + col*220, 595 + row*28), 16, CREAM)
+        self.back_btn.draw(surf)
 
-        t = QLabel("PAUSED")
-        tf = QFont()
-        tf.setPixelSize(30)
-        tf.setBold(True)
-        t.setFont(tf)
-        t.setStyleSheet("color: #FFD24A; letter-spacing: 2px;")
-        t.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        b1 = StyledButton("RESUME", primary=True)
-        b1.clicked.connect(self.resume_requested.emit)
-        b2 = StyledButton("RESTART")
-        b2.clicked.connect(self.restart_requested.emit)
-        b3 = StyledButton("MAIN MENU")
-        b3.clicked.connect(self.menu_requested.emit)
+class SettingsScreen(Screen):
+    def __init__(self, game, back=None):
+        super().__init__(game)
+        self.back_screen = back or MainMenuScreen(game)
+        self.back_btn = Button(20, 660, 120, 45, "Back", lambda: game.change_screen(self.back_screen))
+        self.qfreq_btn = Button(WIDTH//2 - 150, 220, 300, 55, self._q_freq_label(),
+                                 self.cycle_q_freq)
+        self.mute_btn = Button(WIDTH//2 - 150, 300, 300, 55, self._mute_label(), self.toggle_mute)
+        self.reset_btn = Button(WIDTH//2 - 150, 400, 300, 55, "Reset Progress (HOLD)",
+                                 self.confirm_reset, color=(120, 40, 40))
+        self.reset_confirm_until = 0.0
 
-        pl.addWidget(t, 0, Qt.AlignmentFlag.AlignCenter)
-        pl.addSpacing(14)
-        pl.addWidget(b1)
-        pl.addWidget(b2)
-        pl.addWidget(b3)
+    def _q_freq_label(self):
+        n = self.game.db.get_setting('question_freq', 1)
+        if n == 0: return "Questions: OFF"
+        return f"Question every {n} card(s)"
 
-        outer.addWidget(panel)
+    def _mute_label(self):
+        return "Sound: OFF" if self.game.db.get_setting('mute', 0) else "Sound: ON"
 
-    def mousePressEvent(self, event) -> None:
-        event.accept()
+    def cycle_q_freq(self):
+        n = self.game.db.get_setting('question_freq', 1)
+        cycle = [1, 2, 3, 0]
+        idx = (cycle.index(n) + 1) % len(cycle) if n in cycle else 0
+        self.game.db.set_setting('question_freq', cycle[idx])
+        self.qfreq_btn.text = self._q_freq_label()
 
-class ResultsWidget(QWidget):
-    play_again_requested = Signal()
-    menu_requested = Signal()
+    def toggle_mute(self):
+        m = self.game.db.get_setting('mute', 0)
+        self.game.db.set_setting('mute', 1 - m)
+        if 1 - m: 
+            try: pygame.mixer.pause()
+            except: pass
+        else:
+            try: pygame.mixer.unpause()
+            except: pass
+        self.mute_btn.text = self._mute_label()
 
-    def __init__(self, parent: Optional[QWidget] = None) -> None:
-        super().__init__(parent)
-        self.setObjectName("resultsRoot")
-        self.setStyleSheet("""
-            QWidget#resultsRoot {
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #241031, stop:1 #0B0F1A);
-            }
-        """)
-        layout = QVBoxLayout(self)
-        layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        layout.setSpacing(12)
-        layout.setContentsMargins(40, 40, 40, 40)
+    def confirm_reset(self):
+        if time.time() - self.reset_confirm_until < 2.0:
+            self.game.db.reset()
+            self.reset_confirm_until = 0.0
+            self.reset_btn.text = "Reset Progress (HOLD)"
+        else:
+            self.reset_confirm_until = time.time()
+            self.reset_btn.text = "Click again to confirm!"
 
-        self.title_label = QLabel("SESSION COMPLETE")
-        tf = QFont()
-        tf.setPixelSize(34)
-        tf.setBold(True)
-        self.title_label.setFont(tf)
-        self.title_label.setStyleSheet("color: #FFD24A; letter-spacing: 3px;")
-        self.title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+    def handle_event(self, e):
+        self.back_btn.handle_event(e)
+        self.qfreq_btn.handle_event(e)
+        self.mute_btn.handle_event(e)
+        self.reset_btn.handle_event(e)
 
-        self.score_label = QLabel("0")
-        sfl = QFont()
-        sfl.setPixelSize(76)
-        sfl.setBold(True)
-        self.score_label.setFont(sfl)
-        self.score_label.setStyleSheet("color: #36D6B0;")
-        self.score_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+    def update(self, dt):
+        mp = pygame.mouse.get_pos()
+        self.back_btn.update(mp)
+        self.qfreq_btn.update(mp)
+        self.mute_btn.update(mp)
+        self.reset_btn.update(mp)
+        if self.reset_confirm_until and time.time() - self.reset_confirm_until > 2.0:
+            self.reset_confirm_until = 0.0
+            self.reset_btn.text = "Reset Progress (HOLD)"
 
-        self.score_caption = QLabel("FINAL SCORE")
-        cf = QFont()
-        cf.setPixelSize(13)
-        cf.setBold(True)
-        self.score_caption.setFont(cf)
-        self.score_caption.setStyleSheet("color: #6B7794; letter-spacing: 3px;")
-        self.score_caption.setAlignment(Qt.AlignmentFlag.AlignCenter)
+    def draw(self, surf):
+        draw_bg(surf)
+        draw_text(surf, "Settings", (WIDTH//2, 60), 48, GOLD, bold=True, center=True)
+        p = self.game.db.get_player()
+        draw_text(surf, f"Level {p['level']}  •  XP {p['xp']}  •  Gold {p['gold']}  •  Battles Won {p['battles_won']}",
+                  (WIDTH//2, 140), 20, CREAM, center=True)
+        self.qfreq_btn.draw(surf)
+        self.mute_btn.draw(surf)
+        self.reset_btn.draw(surf)
+        self.back_btn.draw(surf)
 
-        self.stats_label = QLabel("")
-        stf = QFont()
-        stf.setPixelSize(16)
-        self.stats_label.setFont(stf)
-        self.stats_label.setStyleSheet("color: #F4F7FF;")
-        self.stats_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        self.xp_label = QLabel("")
-        xf = QFont()
-        xf.setPixelSize(20)
-        xf.setBold(True)
-        self.xp_label.setFont(xf)
-        self.xp_label.setStyleSheet("color: #FF8A3D;")
-        self.xp_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        btn_again = StyledButton("PLAY AGAIN", primary=True)
-        btn_again.setFixedSize(240, 54)
-        btn_again.clicked.connect(self.play_again_requested.emit)
-
-        btn_menu = StyledButton("MAIN MENU")
-        btn_menu.setFixedSize(240, 48)
-        btn_menu.clicked.connect(self.menu_requested.emit)
-
-        layout.addStretch(1)
-        layout.addWidget(self.title_label)
-        layout.addSpacing(6)
-        layout.addWidget(self.score_caption)
-        layout.addWidget(self.score_label)
-        layout.addSpacing(12)
-        layout.addWidget(self.stats_label)
-        layout.addWidget(self.xp_label)
-        layout.addSpacing(24)
-        layout.addWidget(btn_again, 0, Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(btn_menu, 0, Qt.AlignmentFlag.AlignCenter)
-        layout.addStretch(1)
-
-    def set_results(self, score: int, correct: int, total: int,
-                    max_combo: int, xp: int) -> None:
-        acc = int(round(100.0 * correct / total)) if total > 0 else 0
-        self.score_label.setText(str(score))
-        self.stats_label.setText(
-            f"Correct:  {correct} / {total}        Accuracy:  {acc}%\n"
-            f"Max Combo:  ×{max_combo}"
-        )
-        self.xp_label.setText(f"+{xp} XP earned")
 
 # ---------------------------------------------------------------------------
-# Main Window
+# GAME
 # ---------------------------------------------------------------------------
+class Game:
+    def __init__(self):
+        self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
+        pygame.display.set_caption("Multiply Royale - Rise of the Number Kings")
+        self.clock = pygame.time.Clock()
+        self.running = True
+        try:
+            self.db = SaveDB(get_data_dir() / 'save.db')
+        except Exception as e:
+            print("DB error, using memory save:", e)
+            self.db = SaveDB(':memory:')
+        self.mult = MultEngine(self.db)
+        init_sfx()
+        self.current_screen = MainMenuScreen(self)
 
-class MainWindow(QMainWindow):
-    def __init__(self) -> None:
-        super().__init__()
-        self.setWindowTitle("Fruit Slash — Multiplication Arcade")
-        self.resize(980, 700)
-        self.setMinimumSize(760, 560)
-        self.setStyleSheet("background-color: #0B0F1A;")
+    def change_screen(self, screen):
+        self.current_screen = screen
 
-        self.settings = QSettings("FruitSlash", "Progression")
-        self.best_score = self._safe_int(self.settings.value("best_score", 0), 0)
-        self.total_xp = self._safe_int(self.settings.value("total_xp", 0), 0)
-        self.volume = self._safe_float(self.settings.value("volume", 0.8), 0.8)
-        self.muted = self._safe_bool(self.settings.value("muted", False), False)
-
-        self.audio = AudioManager()
-        self.audio.set_volume(self.volume)
-        self.audio.set_muted(self.muted)
-
-        self.stack = QStackedWidget()
-        self.setCentralWidget(self.stack)
-
-        self.menu = MainMenuWidget()
-        self.canvas = GameCanvas(self.audio)
-        self.settings_widget = SettingsWidget(self.audio)
-        self.results = ResultsWidget()
-
-        self.stack.addWidget(self.menu)
-        self.stack.addWidget(self.canvas)
-        self.stack.addWidget(self.settings_widget)
-        self.stack.addWidget(self.results)
-
-        self.pause_overlay = PauseOverlay(self.canvas)
-        self.canvas.overlay = self.pause_overlay
-        self.pause_overlay.setGeometry(0, 0, self.canvas.width(), self.canvas.height())
-        self.pause_overlay.hide()
-
-        # signals
-        self.menu.play_requested.connect(self._start_game)
-        self.menu.settings_requested.connect(self._open_settings)
-        self.menu.exit_requested.connect(self.close)
-
-        self.settings_widget.back_requested.connect(self._close_settings)
-        self.settings_widget.volume_changed.connect(self._on_volume_changed)
-        self.settings_widget.mute_changed.connect(self._on_mute_changed)
-
-        self.canvas.session_ended.connect(self._on_session_ended)
-
-        self.pause_overlay.resume_requested.connect(self._resume_game)
-        self.pause_overlay.restart_requested.connect(self._start_game)
-        self.pause_overlay.menu_requested.connect(self._go_to_menu)
-
-        self.results.play_again_requested.connect(self._start_game)
-        self.results.menu_requested.connect(self._go_to_menu)
-
-        # shortcuts
-        self._sc_esc = QShortcut(QKeySequence("Escape"), self)
-        self._sc_esc.activated.connect(self._on_escape)
-        self._sc_p = QShortcut(QKeySequence("P"), self)
-        self._sc_p.activated.connect(self._on_escape)
-
-        # button click sounds
-        for btn in self.findChildren(QPushButton):
+    def run(self):
+        while self.running:
+            dt = self.clock.tick(FPS) / 1000.0
+            dt = min(dt, 0.1)
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.running = False
+                else:
+                    try:
+                        self.current_screen.handle_event(event)
+                    except Exception as e:
+                        print("Event error:", e)
             try:
-                btn.clicked.connect(self._play_click)
-            except Exception:
-                pass
-
-        self._refresh_menu_stats()
-
-    # -- settings helpers ---------------------------------------------------
-
-    @staticmethod
-    def _safe_int(v, default: int = 0) -> int:
+                self.current_screen.update(dt)
+            except Exception as e:
+                print("Update error:", e)
+            try:
+                self.current_screen.draw(self.screen)
+            except Exception as e:
+                print("Draw error:", e)
+            pygame.display.flip()
         try:
-            if v is None:
-                return default
-            return int(v)
-        except (TypeError, ValueError):
-            return default
-
-    @staticmethod
-    def _safe_float(v, default: float = 0.0) -> float:
-        try:
-            if v is None:
-                return default
-            return float(v)
-        except (TypeError, ValueError):
-            return default
-
-    @staticmethod
-    def _safe_bool(v, default: bool = False) -> bool:
-        if isinstance(v, bool):
-            return v
-        if v is None:
-            return default
-        s = str(v).strip().lower()
-        if s in ("true", "1", "yes", "on"):
-            return True
-        if s in ("false", "0", "no", "off", ""):
-            return False
-        return default
-
-    def _rank(self) -> str:
-        xp = self.total_xp
-        if xp >= 5000:
-            return "Diamond"
-        if xp >= 2500:
-            return "Platinum"
-        if xp >= 1000:
-            return "Gold"
-        if xp >= 400:
-            return "Silver"
-        return "Bronze"
-
-    def _refresh_menu_stats(self) -> None:
-        self.menu.update_stats(self.best_score, self.total_xp, self._rank())
-
-    def _play_click(self) -> None:
-        try:
-            self.audio.play("button")
+            self.db.conn.close()
         except Exception:
             pass
+        pygame.quit()
 
-    # -- navigation ---------------------------------------------------------
 
-    def _start_game(self) -> None:
-        self.pause_overlay.hide()
-        self.stack.setCurrentWidget(self.canvas)
-        self.canvas.setFocus()
-        self.canvas.start()
-
-    def _open_settings(self) -> None:
-        self.settings_widget.mute_cb.blockSignals(True)
-        self.settings_widget.mute_cb.setChecked(bool(self.audio.muted))
-        self.settings_widget.mute_cb.blockSignals(False)
-        self.settings_widget.vol_slider.blockSignals(True)
-        self.settings_widget.vol_slider.setValue(int(round(self.audio.volume * 100.0)))
-        self.settings_widget.vol_value.setText(f"{int(round(self.audio.volume * 100.0))}%")
-        self.settings_widget.vol_slider.blockSignals(False)
-        self.stack.setCurrentWidget(self.settings_widget)
-
-    def _close_settings(self) -> None:
-        self.stack.setCurrentWidget(self.menu)
-        self._refresh_menu_stats()
-
-    def _on_volume_changed(self, v: float) -> None:
-        self.volume = float(v)
-        try:
-            self.settings.setValue("volume", float(v))
-        except Exception:
-            pass
-
-    def _on_mute_changed(self, m: bool) -> None:
-        self.muted = bool(m)
-        try:
-            self.settings.setValue("muted", bool(m))
-        except Exception:
-            pass
-
-    def _on_escape(self) -> None:
-        if self.stack.currentWidget() is not self.canvas:
-            return
-        if self.canvas.state == "PLAYING":
-            self.canvas.pause()
-            self.pause_overlay.setGeometry(0, 0, self.canvas.width(), self.canvas.height())
-            self.pause_overlay.show()
-            self.pause_overlay.raise_()
-        elif self.canvas.state == "PAUSED":
-            self._resume_game()
-
-    def _resume_game(self) -> None:
-        self.pause_overlay.hide()
-        self.canvas.resume()
-
-    def _go_to_menu(self) -> None:
-        self.pause_overlay.hide()
-        self.canvas.stop()
-        self._refresh_menu_stats()
-        self.stack.setCurrentWidget(self.menu)
-
-    # -- session end --------------------------------------------------------
-
-    def _compute_xp(self, score: int, correct: int) -> int:
-        return max(0, int(score // 10) + int(correct) * 5)
-
-    def _on_session_ended(self, score: int, correct: int, total: int,
-                          max_combo: int) -> None:
-        xp = self._compute_xp(score, correct)
-        self.total_xp += xp
-        if score > self.best_score:
-            self.best_score = score
-        try:
-            self.settings.setValue("best_score", int(self.best_score))
-            self.settings.setValue("total_xp", int(self.total_xp))
-            self.settings.setValue("volume", float(self.volume))
-            self.settings.setValue("muted", bool(self.muted))
-            self.settings.sync()
-        except Exception:
-            pass
-
-        self.results.set_results(score, correct, total, max_combo, xp)
-        self.stack.setCurrentWidget(self.results)
-        self._refresh_menu_stats()
-
-    # -- window events ------------------------------------------------------
-
-    def resizeEvent(self, event) -> None:
-        super().resizeEvent(event)
-        if self.pause_overlay is not None:
-            self.pause_overlay.setGeometry(0, 0,
-                                           self.canvas.width(),
-                                           self.canvas.height())
-
-    def closeEvent(self, event) -> None:
-        try:
-            self.settings.setValue("best_score", int(self.best_score))
-            self.settings.setValue("total_xp", int(self.total_xp))
-            self.settings.setValue("volume", float(self.volume))
-            self.settings.setValue("muted", bool(self.muted))
-            self.settings.sync()
-        except Exception:
-            pass
-        try:
-            self.canvas.timer.stop()
-        except Exception:
-            pass
-        try:
-            self.audio.shutdown()
-        except Exception:
-            pass
-        super().closeEvent(event)
-
-# ---------------------------------------------------------------------------
-# Entry point
-# ---------------------------------------------------------------------------
-
-def main() -> int:
+if __name__ == '__main__':
     try:
-        app = QApplication(sys.argv)
-    except Exception:
-        return 1
-    app.setApplicationName("Fruit Slash")
-    app.setOrganizationName("FruitSlash")
-    window = MainWindow()
-    window.show()
-    code = app.exec()
-    cleanup_temp_files()
-    return code
-
-if __name__ == "__main__":
-    sys.exit(main())
+        Game().run()
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        pygame.quit()
+        sys.exit(1)
